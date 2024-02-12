@@ -1,0 +1,58 @@
+{
+  "events": [
+    {
+      "tStartMs": 16850,
+      "dDurationMs": 2044,
+      "segs": [
+        {
+          "utf8": "Mr Bond?"
+        }
+      ]
+    },
+    {
+      "tStartMs": 20729,
+      "dDurationMs": 1418,
+      "segs": [
+        {
+          "utf8": "Yes?"
+        }
+      ]
+    },
+    {
+      "tStartMs": 22231,
+      "dDurationMs": 2961,
+      "segs": [
+        {
+          "utf8": "I'm Lieutenant Mathis\nof the Special Police."
+        }
+      ]
+    },
+    {
+      "tStartMs": 29196,
+      "dDurationMs": 2753,
+      "segs": [
+        {
+          "utf8": "These are my credentials."
+        }
+      ]
+    },
+    {
+      "tStartMs": 32032,
+      "dDurationMs": 2044,
+      "segs": [
+        {
+          "utf8": "They appear to be in order."
+        }
+      ]
+    },
+    {
+      "tStartMs": 34201,
+      "dDurationMs": 2210,
+      "segs": [
+        {
+          "utf8": "Come with me."
+        }
+      ]
+    }
+  ]
+}

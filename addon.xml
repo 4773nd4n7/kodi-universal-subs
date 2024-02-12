@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- See https://kodi.wiki/view/Addon.xml -->
+<addon id="service.subtitles.universalsubs" name="Universal Subs" version="1.0.0" provider-name="4773nd4n7">
+	<requires>
+		<!-- See https://kodi.tv/addons/nexus/category/python-modules/ -->
+		<import addon="xbmc.python" version="3.0.0"/>
+		<import addon="script.module.beautifulsoup4" />
+		<import addon="script.module.cachetools"/>
+		<import addon="script.module.chardet" />
+		<import addon="script.module.future" />
+		<import addon="script.module.html2text" />
+		<import addon="script.module.html5lib"/>
+		<import addon="script.module.typing_extensions" />
+		<import addon="script.module.xmltodict" />
+		<import addon="script.module.yaml" />
+	</requires>
+	<extension point="xbmc.subtitle.module" library="main.py" />
+	<extension point="xbmc.addon.metadata">
+		<summary lang="en_US">Universal Subs plugin</summary>
+		<description lang="es_AR">Busca y descarga subtítulos desde distintos backends</description>
+		<description lang="en_GB">Search and download subtitles from various backends</description>
+		<language>es en</language>
+		<platform>all</platform>
+		<license>MIT</license>
+		<forum>https://forum.kodi.tv/showthread.php?tid=xxxx</forum>
+		<email>attendant51@gmail.com</email>
+		<source>https://github.com/4773nd4n7/kodi-universal-subs</source>
+		<news>v1.0.0 (02/12/2024)
+		[new] Initial release
+		</news>
+		<assets>
+			<icon>icon.png</icon>
+			<!--
+			<fanart></fanart>
+			<banner></banner>
+			<clearlogo></clearlogo>
+			<screenshot></screenshot>
+			-->
+		</assets>
+	</extension>
+</addon>

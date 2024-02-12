@@ -1,0 +1,130 @@
+<?xml version="1.0" ?>
+<settings version="1">
+    <!-- https://kodi.wiki/view/Add-on_settings_conversion -->
+    <section id="service.subtitles.universalsubs">
+        <!-- General Settings -->
+        <category id="general" label="30000" help="30000">
+            <group id="1">
+                <setting id="providers" type="list[string]" label="30001" help="30001">
+                    <level>0</level>
+                    <default>OpenSubtitles|Addic7ed|SubDivX|PodnapisiNET|FileSystem</default>
+                    <constraints>
+                        <options>
+                            <option label="OpenSubtitles.org | OS">OpenSubtitles</option>
+                            <option label="Addic7ed.com | AD7">Addic7ed</option>
+                            <option label="SubDivX | SDX">SubDivX</option>
+                            <option label="Podnapisi.NET | PN">PodnapisiNET</option>
+                            <option label="File System | FS">FileSystem</option>
+                        </options>
+                    </constraints>
+                    <control type="list" format="string">
+                        <heading>30001</heading>
+                        <multiselect>true</multiselect>
+                    </control>
+                </setting>
+                <setting id="translators" type="list[string]" label="30002" help="30002">
+                    <level>0</level>
+                    <default>Google</default>
+                    <constraints>
+                        <options>
+                            <option label="Google | GG">Google</option>
+                            <option label="Bing | BG">Bing</option>
+                            <option label="Libre | LB">Libre</option>
+                        </options>
+                    </constraints>
+                    <control type="list" format="string">
+                        <heading>30002</heading>
+                        <multiselect>true</multiselect>
+                    </control>
+                </setting>
+                <setting id="include_author_on_results" type="boolean" label="30003" help="30003">
+                    <level>1</level>
+                    <default>true</default>
+                    <control type="toggle"/>
+                </setting>
+                <setting id="include_downloads_on_results" type="boolean" label="30004" help="30004">
+                    <level>1</level>
+                    <default>true</default>
+                    <control type="toggle"/>
+                </setting>
+                <setting id="max_search_results" type="integer" label="30005" help="30005">
+                    <level>1</level>
+                    <default>50</default>
+                    <control type="edit" format="integer">
+                        <heading>30005</heading>
+                    </control>
+                </setting>
+            </group>
+        </category>
+
+
+        <!-- File System Settings -->
+        <category id="file_system" label="50000" help="50000">
+            <group id="1">
+                <setting id="file_system_provider_path" type="path" label="50001" help="50001">
+                    <level>0</level>
+                    <default>-1</default>
+                    <constraints>
+                        <writable>false</writable>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="button" format="path">
+                        <heading>50001</heading>
+                    </control>
+                </setting>
+            </group>
+        </category>
+
+        <!-- Advanced Settings -->
+        <category id="advanced" label="40000" help="40000">
+            <group id="1">
+                <setting id="search_cache_ttl" type="integer" label="40001" help="40001">
+                    <level>2</level>
+                    <default>10</default>
+                    <constraints>
+                        <minimum>0</minimum>
+                        <step>1</step>
+                        <maximum>120</maximum>
+                    </constraints>
+                    <control type="slider" format="integer">
+                        <popup>false</popup>
+                    </control>
+                </setting>
+                <setting id="translation_cache_ttl" type="integer" label="40002" help="40002">
+                    <level>2</level>
+                    <default>30</default>
+                    <constraints>
+                        <minimum>0</minimum>
+                        <step>1</step>
+                        <maximum>365</maximum>
+                    </constraints>
+                    <control type="slider" format="integer">
+                        <popup>false</popup>
+                    </control>
+                </setting>
+                <setting id="seven_zip_executable" type="path" label="40003" help="40003">
+                    <level>2</level>
+                    <default/>
+                    <constraints>
+                        <writable>false</writable>
+                        <masking>executable</masking>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="button" format="file">
+                        <heading>40002</heading>
+                    </control>
+                </setting>
+                <setting id="exclude_splitted_subtitles" type="boolean" label="40004" help="40004">
+                    <level>2</level>
+                    <default>true</default>
+                    <control type="toggle"/>
+                </setting>
+                <setting id="cache_whole_requests" type="boolean" label="40005" help="40005">
+                    <level>3</level>
+                    <default>false</default>
+                    <control type="toggle"/>
+                </setting>
+            </group>
+        </category>
+    </section>
+</settings>

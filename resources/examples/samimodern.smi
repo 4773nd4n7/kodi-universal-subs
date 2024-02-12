@@ -1,0 +1,31 @@
+<SAMI>
+<HEAD>
+<TITLE>SAMIModern</TITLE>
+<SAMIParam>
+  Metrics {time:ms;}
+  Spec {MSFT:1.0;}
+</SAMIParam>
+<STYLE TYPE="text/css">
+<!--
+  P { font-family: Arial; font-weight: normal; color: white; background-color: black; text-align: center; }
+  .ENUSCC { name: English; lang: en-US ; SAMIType: CC ; }
+-->
+</STYLE>
+</HEAD>
+<BODY>
+<-- Open play menu, choose Captions and Subtitles, On if available -->
+<-- Open tools menu, Security, Show local captions when present -->
+<SYNC Start="16850"><P Class="ENUSCC">Mr Bond?</P></SYNC>
+<SYNC Start="18894"><P Class="ENUSCC">&nbsp;</P></SYNC>
+<SYNC Start="20729"><P Class="ENUSCC">Yes?</P></SYNC>
+<SYNC Start="22147"><P Class="ENUSCC">&nbsp;</P></SYNC>
+<SYNC Start="22231"><P Class="ENUSCC">I'm Lieutenant Mathis<br />of the Special Police.</P></SYNC>
+<SYNC Start="25192"><P Class="ENUSCC">&nbsp;</P></SYNC>
+<SYNC Start="29196"><P Class="ENUSCC">These are my credentials.</P></SYNC>
+<SYNC Start="31949"><P Class="ENUSCC">&nbsp;</P></SYNC>
+<SYNC Start="32032"><P Class="ENUSCC">They appear to be in order.</P></SYNC>
+<SYNC Start="34076"><P Class="ENUSCC">&nbsp;</P></SYNC>
+<SYNC Start="34201"><P Class="ENUSCC">Come with me.</P></SYNC>
+<SYNC Start="36411"><P Class="ENUSCC">&nbsp;</P></SYNC>
+</BODY>
+</SAMI>

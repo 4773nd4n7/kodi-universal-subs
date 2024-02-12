@@ -1,0 +1,19 @@
+[Script Info]
+; This is an Advanced Sub Station Alpha v4+ script.
+Title: 
+ScriptType: v4.00+
+PlayDepth: 0
+ScaledBorderAndShadow: Yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,20,&H00FFFFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1,1,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:16.85,0:00:18.89,Default,,0,0,0,,Mr Bond?
+Dialogue: 0,0:00:20.73,0:00:22.15,Default,,0,0,0,,Yes?
+Dialogue: 0,0:00:22.23,0:00:25.19,Default,,0,0,0,,I'm Lieutenant Mathis\Nof the Special Police.
+Dialogue: 0,0:00:29.20,0:00:31.95,Default,,0,0,0,,These are my credentials.
+Dialogue: 0,0:00:32.03,0:00:34.08,Default,,0,0,0,,They appear to be in order.
+Dialogue: 0,0:00:34.20,0:00:36.41,Default,,0,0,0,,Come with me.

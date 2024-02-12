@@ -1,0 +1,30 @@
+{QTtext} {font:Tahoma}
+{plain} {size:20}
+{timeScale:30}
+{width:160} {height:32}
+{timestamps:absolute} {language:0}
+[00:00:16.20]
+Mr Bond?
+[00:00:18.21]
+
+[00:00:20.17]
+Yes?
+[00:00:22.04]
+
+[00:00:22.06]
+I'm Lieutenant Mathis
+of the Special Police.
+[00:00:25.05]
+
+[00:00:29.05]
+These are my credentials.
+[00:00:31.23]
+
+[00:00:32.01]
+They appear to be in order.
+[00:00:34.02]
+
+[00:00:34.05]
+Come with me.
+[00:00:36.10]
+

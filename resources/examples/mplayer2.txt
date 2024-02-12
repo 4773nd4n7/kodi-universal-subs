@@ -1,0 +1,6 @@
+[168][188]Mr Bond?
+[207][221]Yes?
+[222][251]I'm Lieutenant Mathis|of the Special Police.
+[291][319]These are my credentials.
+[320][340]They appear to be in order.
+[342][364]Come with me.

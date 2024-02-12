@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<document>
+  <requestheader video_id="X" />
+  <annotations>
+    <annotation id="annotation_1" author="Subtitle Edit" type="text" style="speech">
+      <TEXT>Mr Bond?</TEXT>
+      <segment>
+        <movingRegion type="anchored">
+          <anchoredRegion t="0:00:16.850" d="0" />
+          <anchoredRegion t="0:00:18.894" d="0" />
+        </movingRegion>
+      </segment>
+    </annotation>
+    <annotation id="annotation_2" author="Subtitle Edit" type="text" style="speech">
+      <TEXT>Yes?</TEXT>
+      <segment>
+        <movingRegion type="anchored">
+          <anchoredRegion t="0:00:20.729" d="0" />
+          <anchoredRegion t="0:00:22.147" d="0" />
+        </movingRegion>
+      </segment>
+    </annotation>
+    <annotation id="annotation_3" author="Subtitle Edit" type="text" style="speech">
+      <TEXT>I'm Lieutenant Mathis
+of the Special Police.</TEXT>
+      <segment>
+        <movingRegion type="anchored">
+          <anchoredRegion t="0:00:22.231" d="0" />
+          <anchoredRegion t="0:00:25.192" d="0" />
+        </movingRegion>
+      </segment>
+    </annotation>
+    <annotation id="annotation_4" author="Subtitle Edit" type="text" style="speech">
+      <TEXT>These are my credentials.</TEXT>
+      <segment>
+        <movingRegion type="anchored">
+          <anchoredRegion t="0:00:29.196" d="0" />
+          <anchoredRegion t="0:00:31.949" d="0" />
+        </movingRegion>
+      </segment>
+    </annotation>
+    <annotation id="annotation_5" author="Subtitle Edit" type="text" style="speech">
+      <TEXT>They appear to be in order.</TEXT>
+      <segment>
+        <movingRegion type="anchored">
+          <anchoredRegion t="0:00:32.32" d="0" />
+          <anchoredRegion t="0:00:34.76" d="0" />
+        </movingRegion>
+      </segment>
+    </annotation>
+    <annotation id="annotation_6" author="Subtitle Edit" type="text" style="speech">
+      <TEXT>Come with me.</TEXT>
+      <segment>
+        <movingRegion type="anchored">
+          <anchoredRegion t="0:00:34.201" d="0" />
+          <anchoredRegion t="0:00:36.411" d="0" />
+        </movingRegion>
+      </segment>
+    </annotation>
+  </annotations>
+</document>
