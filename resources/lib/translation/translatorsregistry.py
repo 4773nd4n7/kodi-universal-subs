@@ -3,7 +3,7 @@
 import logging
 from typing import Dict, List
 
-from resources.lib.settings import Settings
+from resources.lib.common.settings import Settings
 from resources.lib.translation.bingtranslator import BingTranslator
 from resources.lib.translation.googletranslator import GoogleTranslator
 from resources.lib.translation.libretranslator import LibreTranslator

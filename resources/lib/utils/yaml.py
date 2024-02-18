@@ -6,12 +6,12 @@ from typing import Any
 
 import yaml
 
-from resources.lib.language import Language
+from resources.lib.common.language import Language
 from resources.lib.providers.getresult import GetResult
 
 
 def language_representer(dumper: yaml.SafeDumper, value: Language) -> yaml.nodes.MappingNode:
-    return dumper.represent_str("%s [%s:%s]" % (value.name, value.two_letter_code, value.three_letter_code))
+    return dumper.represent_str(str(value))
 
 
 def timedelta_representer(dumper: yaml.SafeDumper, value: timedelta) -> yaml.nodes.MappingNode:
@@ -22,6 +22,14 @@ def path_representer(dumper: yaml.SafeDumper, value: Path) -> yaml.nodes.Mapping
     return dumper.represent_str(str(value.resolve()))
 
 
+def format_data_size(data_bytes: int) -> str:
+    for unit in ("", "K", "M", "G", "T", "P", "E", "Z"):
+        if abs(data_bytes) < 1024.0:
+            return f"{data_bytes:3.1f} {unit}B"
+        data_bytes /= 1024.0
+    return f"{data_bytes:.1f} YB"
+
+
 def get_result_representer(dumper: yaml.SafeDumper, value: GetResult) -> yaml.nodes.MappingNode:
     value_class = value.__class__
     return dumper.represent_mapping("!python/object:%s.%s" % (value_class.__module__, value_class.__name__), {
@@ -29,7 +37,7 @@ def get_result_representer(dumper: yaml.SafeDumper, value: GetResult) -> yaml.no
         "file_name": value.file_name,
         "is_forced": value.is_forced,
         "is_hearing_impaired": value.is_hearing_impaired,
-        "content_length": len(value.content) if value.content else -1,
+        "content_size":  format_data_size(len(value.content)) if value.content else None,
     })
 
 
@@ -46,4 +54,4 @@ def to_yaml(data: Any) -> str:
 
 
 def from_yaml(text: str):
-    return yaml.load(text)
+    return yaml.safe_load(text)

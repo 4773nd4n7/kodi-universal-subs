@@ -6,7 +6,7 @@ from re import IGNORECASE, UNICODE, compile
 from typing import List
 from urllib.parse import ParseResult, unquote, urlparse
 
-from resources.lib.language import Language
+from resources.lib.common.language import Language
 
 URL_REGEX = compile(r'[A-z]+://.*', IGNORECASE | UNICODE)
 

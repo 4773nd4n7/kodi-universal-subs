@@ -6,22 +6,23 @@ import re
 import shutil
 import tempfile
 from abc import abstractmethod
-from html import unescape
 from pathlib import Path
-from typing import List, Set
+from typing import List
 
-from resources.lib.cache import Cache
-from resources.lib.compression import Compression
-from resources.lib.httpclient import HttpClient
-from resources.lib.json import to_json
-from resources.lib.language import Language
+from resources.lib.common.language import Language
+from resources.lib.common.mappedlanguages import MappedLanguages
+from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
 from resources.lib.providers.provider import Provider
 from resources.lib.providers.searchrequest import SearchRequest
 from resources.lib.providers.searchresult import SearchResult
-from resources.lib.settings import Settings
-from resources.lib.yaml import to_yaml
+from resources.lib.utils.cache import Cache
+from resources.lib.utils.compression import Compression
+from resources.lib.utils.httpclient import HttpClient
+from resources.lib.utils.json import to_json
+from resources.lib.utils.text import strip_text_from
+from resources.lib.utils.yaml import to_yaml
 
 HTTP_USER_AGENT = "User-Agent=Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.21 Safari/537.36"
 
@@ -34,70 +35,42 @@ RE_HEARING_IMPAIRED_SUBTITLE_FILE_NAME = re.compile(r"\b(sdh|hi)\b", re.IGNORECA
 FEATURE_CORRECTIONS = [("5 1", "5.1"), ("7 1", "7.1"), ("DTS HD", "DTS-HD")]
 
 
-def unescape_html(text: str, simplify_spaces=True) -> str:
-    clean_text = unescape(text)
-    if simplify_spaces:
-        clean_text = re.sub(r"\s+", " ", clean_text).strip()
-    return clean_text
-
-
-def find_text_between(text: str, start_marker: str, end_marker: str, strip_markers: bool = False) -> str:
-    start_marker_index = text.find(start_marker)
-    if start_marker_index < 0:
-        return None
-    end_marker_index = text.find(end_marker, start_marker_index)
-    if end_marker_index < 0:
-        return None
-    if strip_markers:
-        result = text[start_marker_index + len(start_marker):end_marker_index]
-    else:
-        result = text[start_marker_index:end_marker_index + len(end_marker)]
-    return result
-
-
-def normalize_text(text: str, alfanumeric_only=False) -> str:
-    if alfanumeric_only:
-        return re.sub(r"[^A-z0-9]+", " ", text).strip().lower()
-    else:
-        return re.sub(r"\s+", " ", text).strip().lower()
-
-
-def normalize_white_space(text: str) -> str:
-    return re.sub(r"\s+", " ", text).strip()
-
-
-def strip_text_from(what: str, where: str, beginning_only=False) -> str:
-    what = re.compile((r"^[\s\.]*" if beginning_only else r"[\s\.]*") + r"[\s\.]+".join([re.escape(s)
-                      for s in re.split(r"[\s\.]+", what.strip())]) + r"[\s\.]*", re.IGNORECASE)
-    stripped = re.sub(what, " ", where).strip()
-    return stripped
-
-
 class SourceProvider(Provider):
 
-    def __init__(self, settings: Settings):
+    def __init__(self,
+                 settings: Settings,
+                 supported_languages: MappedLanguages):
         super().__init__()
-        self._settings = settings
+        self.__settings = settings
+        self.__supported_languages = supported_languages
         cache = Cache(
             'UniversalSubs.Cache.Provider.' + self.name,
             settings.addon_user_path.joinpath("cache-provider-" + self.name.lower()),
             settings.search_cache_ttl)
         if settings.cache_whole_requests:
-            self._cache = Cache('UniversalSubs.Cache.Provider.' + self.name)  # dummy cache
-            self._http_client = HttpClient(cache=cache)
+            self.__cache = Cache('UniversalSubs.Cache.Provider.' + self.name)  # dummy cache
+            self.__http_client = HttpClient(cache=cache)
         else:
-            self._cache = cache
-            self._http_client = HttpClient()
+            self.__cache = cache
+            self.__http_client = HttpClient()
 
     @property
-    def supported_languages(self) -> Set[Language]:
-        return None
+    def _settings(self) -> Settings:
+        return self.__settings
 
     @property
-    def overrides_ratings_from_downloads(self) -> bool:
+    def _supported_languages(self) -> MappedLanguages:
+        return self.__supported_languages
+
+    @property
+    def _http_client(self) -> HttpClient:
+        return self.__http_client
+
+    @property
+    def _overrides_ratings_from_downloads(self) -> bool:
         return False
 
-    def overrides_is_sync_from_description_and_filename(self) -> bool:
+    def _overrides_is_sync_from_description_and_filename(self) -> bool:
         return True
 
     def _compute_result_score(self, search_result: SearchResult) -> float:
@@ -107,7 +80,7 @@ class SourceProvider(Provider):
         if request.is_manual_search:
             return request.manual_search_text
         elif request.is_show_search:
-            search_term_parts = ["%s" % request.show_title]
+            search_term_parts = [request.show_title]
             if request.show_season_number is not None:
                 search_term_parts.append(" S%#02d" % request.show_season_number)
             if request.show_episode_number is not None:
@@ -117,39 +90,47 @@ class SourceProvider(Provider):
             return "%s%s" % (request.title, " (%s)" % request.year if include_year and request.year else "")
 
     @abstractmethod
-    def _fetch_search_results(self, request: SearchRequest, supported_request_languages: List[Language]) -> List[SearchResult]:
+    def _fetch_search_results(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[SearchResult]:
         pass
+
+    def __resolve_search_request_internal_languages(self, request: SearchRequest) -> List[Language]:
+        supported_external_languages = self.__supported_languages.external_values.intersection(request.languages or [])
+        if self.__supported_languages.external_values and request.languages and not supported_external_languages:
+            return None  # source provider supports known set of languages but none match specified in request, will skip request
+        # Source providers understand their internal languages representation so we convert the languages before delegating
+        supported_internal_languages = self.__supported_languages.to_internal(supported_external_languages)
+        # Sort in consistent order, as languages are commonly made part of cache related keys and this way we increase cache hit rate
+        supported_internal_languages = sorted(supported_internal_languages, key=lambda l: l.name)
+        return supported_internal_languages
 
     def search(self, request: SearchRequest) -> List[SearchResult]:
         self._logger.info("Searching with request:\n%s" % to_yaml(request))
-        # NOTE: important to provided languages in consistent order, as this is usually made part of cache related keys
-        supported_request_languages = sorted(
-            self.supported_languages.intersection(request.languages),
-            key=lambda l: l.three_letter_code
-        ) if self.supported_languages and request.languages else request.languages
-        if not supported_request_languages and request.languages:
-            self._logger.info("No supported languages found, skipping search request")
-        elif supported_request_languages is not None and not supported_request_languages:
-            self._logger.info("No supported languages found, skipping search request")
+        request_internal_languages = self.__resolve_search_request_internal_languages(request)
+        if request_internal_languages is None:
+            self._logger.info("No supported requested languages found, skipping search request")
+            return []
         else:
-            results: List[SearchResult] = []
-            cache_key = "search:%s" % to_json(request)
-            results = self._cache.get_or_initialize(
-                cache_key,
-                lambda: self._fetch_search_results(request, supported_request_languages))
-            request_file_name = request.get_file_name(False)
+            self._logger.info("Resolved request internal languages:\n%s" % to_yaml(request_internal_languages))
+        results: List[SearchResult] = []
+        cache_key = "search:%s" % to_json(request)
+        results = self.__cache.get_or_initialize(
+            cache_key,
+            lambda: self._fetch_search_results(request, request_internal_languages))
+        request_file_name = request.get_file_name(False)
+        for result in results:
+            result.provider_name = self.name
+            # providers set the language property using the internal languages, we map that to external/standard languages
+            result.language = self._supported_languages.to_external_first(result.language)
+            self.__update_release_info(result)
+            if self._overrides_is_sync_from_description_and_filename:
+                result.is_sync = result.release_info and re.search(
+                    re.escape(request_file_name), result.release_info, re.I) is not None
+        if self._overrides_ratings_from_downloads:
+            max_downloads = float(max([sr.downloads for sr in results], default=0))
             for result in results:
-                result.provider_name = self.name
-                self.__update_release_info(result)
-                if self.overrides_is_sync_from_description_and_filename:
-                    result.is_sync = result.release_info and re.search(
-                        re.escape(request_file_name), result.release_info, re.I) is not None
-            if self.overrides_ratings_from_downloads:
-                max_downloads = float(max([sr.downloads for sr in results], default=0))
-                for result in results:
-                    result.rating = (result.downloads / max_downloads) * 5 if max_downloads else 0.0
-            results = sorted(results, key=lambda search_result: self._compute_result_score(search_result), reverse=True)
-            self._logger.info("Search results:\n%s", to_yaml(results))
+                result.rating = (result.downloads / max_downloads) * 5 if max_downloads else 0.0
+        results = sorted(results, key=lambda search_result: self._compute_result_score(search_result), reverse=True)
+        self._logger.info("Found %s search result(s):\n%s", len(results), to_yaml(results))
         return results
 
     def __update_release_info(self, result: SearchResult) -> None:
@@ -190,7 +171,7 @@ class SourceProvider(Provider):
         result.content = file_content
         return result
 
-    def _process_subtitles_data(self, file_name: str, file_content: bytes) -> List[GetResult]:
+    def _process_get_subtitles_data(self, file_name: str, file_content: bytes) -> List[GetResult]:
         compression_type = Compression.test_compression_type(file_content=file_content)
         results: List[GetResult] = []
         if not compression_type:

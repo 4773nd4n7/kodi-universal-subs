@@ -17,14 +17,14 @@ import xbmcgui
 import xbmcplugin
 import xbmcvfs
 
-from resources.lib.compression import Compression
-from resources.lib.language import Language
-from resources.lib.logging import init_logging
+from resources.lib.common.language import Language
+from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.providersregistry import ProvidersRegistry
 from resources.lib.providers.searchrequest import SearchRequest
-from resources.lib.settings import Settings
-from resources.lib.yaml import to_yaml
+from resources.lib.utils.compression import Compression
+from resources.lib.utils.logging import init_logging_from_yaml
+from resources.lib.utils.yaml import to_yaml
 
 
 class SubtitleAddon:
@@ -33,7 +33,6 @@ class SubtitleAddon:
         kodi_addon = xbmcaddon.Addon()
         self._settings: Settings = Settings()
         self._settings.addon_id = kodi_addon.getAddonInfo("id")
-        self._settings.addon_version = kodi_addon.getAddonInfo("version")
         self._settings.addon_path = Path(xbmcvfs.translatePath(kodi_addon.getAddonInfo("path")))
         self._settings.addon_user_path = Path(xbmcvfs.translatePath(kodi_addon.getAddonInfo("profile")))
 
@@ -55,7 +54,7 @@ class SubtitleAddon:
         if seven_zip_exec_path:
             Compression.seven_zip_exec_path = seven_zip_exec_path
 
-        init_logging(self._settings.addon_path.joinpath('logging_config.jsonc'))
+        init_logging_from_yaml(self._settings.addon_path.joinpath('logging.kodi.yaml'))
         self._logger = logging.getLogger('UniversalSubs')
 
     def __setup_user_data_directory(self) -> None:
@@ -91,7 +90,7 @@ class SubtitleAddon:
         request.show_title = xbmc.getInfoLabel("VideoPlayer.TVshowtitle")
         request.year = int(xbmc.getInfoLabel("VideoPlayer.Year").strip("()"))
         request.file_languages = [
-            Language.from_3_or_2_letter_code(language_three_letter_code)
+            Language.from_three_letter_code(language_three_letter_code)
             for language_three_letter_code in set([
                 xbmc.getInfoLabel("VideoPlayer.AudioLanguage"),
                 xbmc.getInfoLabel("VideoPlayer.SubtitlesLanguage")

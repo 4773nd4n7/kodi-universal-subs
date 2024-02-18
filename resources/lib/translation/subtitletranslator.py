@@ -4,9 +4,9 @@ import copy
 import os
 from typing import List
 
+from resources.lib.common.language import Language
 from resources.lib.formats.subtitleformatsregistry import \
     SubtitleFormatsRegistry
-from resources.lib.language import Language
 from resources.lib.providers.getresult import GetResult
 from resources.lib.translation.translator import Translator
 

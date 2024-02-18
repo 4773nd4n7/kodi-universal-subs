@@ -5,12 +5,13 @@ import re
 import time
 from abc import abstractmethod
 from datetime import timedelta
-from typing import Any, Callable, Dict, Iterable, List, Set
+from typing import Any, Callable, List
 
-from resources.lib.cache import Cache
-from resources.lib.httpclient import HttpClient
-from resources.lib.language import Language
-from resources.lib.settings import Settings
+from resources.lib.common.language import Language
+from resources.lib.common.mappedlanguages import MappedLanguages
+from resources.lib.common.settings import Settings
+from resources.lib.utils.cache import Cache
+from resources.lib.utils.httpclient import HttpClient
 
 
 class UnsupportedTranslationException(Exception):
@@ -33,13 +34,14 @@ class TranslateException(Exception):
 
 class Translator:
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, languages: MappedLanguages):
         self._logger: logging.Logger = logging.getLogger(self.id)
+        self.__languages = languages
         cache = Cache(
             'UniversalSubs.Cache.Translator.' + self.name,
             settings.addon_user_path.joinpath("cache-translator-" + self.name.lower()),
             settings.translation_cache_ttl)
-        if False and settings.cache_whole_requests:  # NOTE: it barely ever makes sense to cache at this level from translations
+        if False and settings.cache_whole_requests:  # NOTE: it barely ever makes sense to cache at request level from translations
             self._cache = Cache('UniversalSubs.Cache.Translator.' + self.name)  # dummy cache
             self._http_client = HttpClient(cache=cache)
         else:
@@ -65,15 +67,10 @@ class Translator:
 
     @abstractmethod
     def supports_translation(self, from_language: Language, to_language: Language) -> bool:
-        pass
-
-    def ensure_supports_translation(self, from_language: Language, to_language: Language) -> None:
-        if not self.supports_translation(from_language, to_language):
-            raise UnsupportedTranslationException(
-                "Translation from %s to %s not supported by %s provider." % (from_language.name, to_language.name, self.name))
+        return self.__languages.has_any_external(from_language) and self.__languages.has_any_external(to_language)
 
     @abstractmethod
-    def _translate(self, from_language: Language, to_language: Language, texts: List[str]) -> List[str]:
+    def _translate(self, internal_from_language: Language, internal_to_language: Language, texts: List[str]) -> List[str]:
         pass
 
     def _translate_in_blocks(
@@ -131,8 +128,13 @@ class Translator:
             text_blocks.append(current_text_block)
         return text_blocks
 
+    def __ensure_supports_translation(self, from_language: Language, to_language: Language) -> None:
+        if not self.supports_translation(from_language, to_language):
+            raise UnsupportedTranslationException(
+                "Translation from %s to %s not supported by %s provider." % (from_language.name, to_language.name, self.name))
+
     def translate(self, from_language: Language, to_language: Language, texts: List[str]) -> List[str]:
-        self.ensure_supports_translation(from_language, to_language)
+        self.__ensure_supports_translation(from_language, to_language)
         translations: List[str] = []
         pending_translations: List[str] = []
         pending_translations_keys: List[str] = []
@@ -145,9 +147,11 @@ class Translator:
                 pending_translations.append(text)
                 pending_translations_keys.append(cache_key)
         if pending_translations:
-            self._logger.info("Translations for %s lines out of %s not found in cache, translating",
-                              len(pending_translations), len(texts))
-            pending_translations = self._translate(from_language, to_language, pending_translations)
+            internal_from_language = self.__languages.to_internal_first(from_language)
+            internal_to_language = self.__languages.to_internal_first(to_language)
+            self._logger.info("Translations for %s lines out of %s not found in cache, translating from %s to %s",
+                              len(pending_translations), len(texts), internal_from_language, internal_to_language)
+            pending_translations = self._translate(internal_from_language, internal_to_language, pending_translations)
             for translation_index, translation in enumerate(translations):
                 if translation is None:
                     translation = pending_translations.pop(0)

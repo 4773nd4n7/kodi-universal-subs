@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from resources.lib.language import Language
+from resources.lib.common.language import Language
 
 
 class SearchResult:

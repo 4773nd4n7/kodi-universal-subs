@@ -1,95 +1,125 @@
 # -*- coding: utf-8 -*-
 
-import math
 import re
-import time
 from datetime import timedelta
-from typing import List, Set, Tuple
-from urllib.parse import quote
+from typing import Dict, List, Tuple, Union
 
-from bs4 import BeautifulSoup
-
-from resources.lib.httpclient import HttpRequest
-from resources.lib.language import Language
+from resources.lib.common.language import Language
+from resources.lib.common.mappedlanguages import MappedLanguages
+from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
 from resources.lib.providers.searchrequest import SearchRequest
 from resources.lib.providers.searchresult import SearchResult
-from resources.lib.providers.sourceprovider import (SourceProvider,
-                                                    find_text_between,
-                                                    unescape_html)
-from resources.lib.settings import Settings
+from resources.lib.providers.sourceprovider import SourceProvider
+from resources.lib.utils.httpclient import HttpRequest
 
-MAX_TITLES_COUNT = 5
+MAX_TITLE_RESULTS = 5
 
 
-SUPPORTED_LANGUAGES = [
-    "Albanian",
-    "Arabic",
-    "Armenian",
-    "Azerbaijani",
-    "Bengali",
-    "Bosnian",
-    "Bulgarian",
-    "Cantonese",
-    "Catalan",
-    "Chinese",
-    "Croatian",
-    "Czech",
-    "Danish",
-    "Dutch",
-    "English",
-    "Estonian",
-    "Euskera",
-    "Finnish",
-    "French",
-    "Galego",
-    "German",
-    "Greek",
-    "Hebrew",
-    "Hindi",
-    "Hungarian",
-    "Icelandic",
-    "Indonesian",
-    "Italian",
-    "Japanese",
-    "Kannada",
-    "Klingon",
-    "Korean",
-    "Latvian",
-    "Lithuanian",
-    "Macedonian",
-    "Malay",
-    "Malayalam",
-    "Marathi",
-    "Norwegian",
-    "Persian",
-    "Polish",
-    "Portuguese",
-    "Romanian",
-    "Russian",
-    "Serbian",
-    "Sinhala",
-    "Slovak",
-    "Slovenian",
-    "Spanish",
-    "Swedish",
-    "Tagalog",
-    "Tamil",
-    "Telugu",
-    "Thai",
-    "Turkish",
-    "Ukrainian",
-    "Vietnamese",
-    "Welsh",
+CANTONESE = Language("Cantonese", standard=False)
+CATALA = Language("Català", standard=False)
+CHINESE_SIMPLIFIED = Language("Chinese (Simplified)", standard=False)
+CHINESE_TRADITIONAL = Language("Chinese (Traditional)", standard=False)
+EUSKERA = Language("Euskera", standard=False)
+FRENCH_CANADIAN = Language("French (Canadian)", standard=False)
+GALEGO = Language("Galego", standard=False)
+PORTUGUESE_BRAZILIAN = Language("Portuguese (Brazilian)", standard=False)
+SERBIAN_CYRILLIC = Language("Serbian (Cyrillic)", standard=False)
+SERBIAN_LATIN = Language("Serbian (Latin)", standard=False)
+SPANISH_ARGENTINA = Language("Spanish (Argentina)", standard=False)
+SPANISH_LATIN_AMERICA = Language("Spanish (Latin America)", standard=False)
+SPANISH_SPAIN = Language("Spanish (Spain)", standard=False)
+
+SUPPORTED_LANGUAGES: List[Language] = [
+    Language("Albanian"),
+    Language("Arabic"),
+    Language("Armenian"),
+    Language("Azerbaijani"),
+    Language("Bengali"),
+    Language("Bosnian"),
+    Language("Bulgarian"),
+    CANTONESE,
+    CATALA,
+    CHINESE_SIMPLIFIED,
+    CHINESE_TRADITIONAL,
+    Language("Croatian"),
+    Language("Czech"),
+    Language("Danish"),
+    Language("Dutch"),
+    Language("English"),
+    Language("Estonian"),
+    EUSKERA,
+    Language("Finnish"),
+    Language("French"),
+    FRENCH_CANADIAN,
+    GALEGO,
+    Language("German"),
+    Language("Greek"),
+    Language("Hebrew"),
+    Language("Hindi"),
+    Language("Hungarian"),
+    Language("Icelandic"),
+    Language("Indonesian"),
+    Language("Italian"),
+    Language("Japanese"),
+    Language("Kannada"),
+    Language("Klingon"),
+    Language("Korean"),
+    Language("Latvian"),
+    Language("Lithuanian"),
+    Language("Macedonian"),
+    Language("Malay"),
+    Language("Malayalam"),
+    Language("Marathi"),
+    Language("Norwegian"),
+    Language("Persian"),
+    Language("Polish"),
+    Language("Portuguese"),
+    PORTUGUESE_BRAZILIAN,
+    Language("Romanian"),
+    Language("Russian"),
+    SERBIAN_CYRILLIC,
+    SERBIAN_LATIN,
+    Language("Sinhala"),
+    Language("Slovak"),
+    Language("Slovenian"),
+    Language("Spanish"),
+    SPANISH_ARGENTINA,
+    SPANISH_LATIN_AMERICA,
+    SPANISH_SPAIN,
+    Language("Swedish"),
+    Language("Tagalog"),
+    Language("Tamil"),
+    Language("Telugu"),
+    Language("Thai"),
+    Language("Turkish"),
+    Language("Ukrainian"),
+    Language("Vietnamese"),
+    Language("Welsh"),
 ]
+
+LANGUAGE_MAPPINGS: Dict[Language, Union[Language, List[Language]]] = {
+    CANTONESE: Language.chinese,
+    CATALA: Language.catalan,
+    CHINESE_SIMPLIFIED: Language.chinese,
+    CHINESE_TRADITIONAL: Language.chinese,
+    EUSKERA: Language.basque,
+    FRENCH_CANADIAN: Language.french,
+    GALEGO: Language.galician,
+    PORTUGUESE_BRAZILIAN: Language.portuguese,
+    SERBIAN_CYRILLIC: Language.serbian,
+    SERBIAN_LATIN: Language.serbian,
+    SPANISH_ARGENTINA: Language.spanish,
+    SPANISH_LATIN_AMERICA: Language.spanish,
+    SPANISH_SPAIN: Language.spanish,
+}
 
 
 class Addic7edSourceProvider(SourceProvider):
 
     def __init__(self, settings: Settings):
-        super().__init__(settings)
-        self._supported_languages = Language.build_languages_set(SUPPORTED_LANGUAGES)
+        super().__init__(settings, MappedLanguages(SUPPORTED_LANGUAGES, LANGUAGE_MAPPINGS))
         self._http_client.base_url = "https://www.addic7ed.com"
         self._http_client.default_headers["Host"] = "www.addic7ed.com"
         self._http_client.default_headers["Referer"] = "https://www.addic7ed.com"
@@ -105,14 +135,10 @@ class Addic7edSourceProvider(SourceProvider):
         return "AD7"
 
     @property
-    def supported_languages(self) -> Set[Language]:
-        return self._supported_languages
-
-    @property
-    def overrides_ratings_from_downloads(self) -> bool:
+    def _overrides_ratings_from_downloads(self) -> bool:
         return True
 
-    def __fetch_search_title_urls(self, request: SearchRequest, supported_request_languages: List[Language]) -> List[Tuple[str, str]]:
+    def __fetch_search_title_urls(self, request: SearchRequest) -> List[Tuple[str, str]]:
         http_request = HttpRequest("/search.php", follow_redirects=False)
         http_request.add_url_query_params({"search": self._build_search_term(request), "Submit": "Search"})
         http_response = self._http_client.exchange(http_request)
@@ -132,10 +158,10 @@ class Addic7edSourceProvider(SourceProvider):
                 titles.append((title_name, title_url))
         return titles
 
-    def _fetch_search_results(self, request: SearchRequest, supported_request_languages: List[Language]) -> List[SearchResult]:
+    def _fetch_search_results(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[SearchResult]:
         results: List[SearchResult] = []
-        titles = self.__fetch_search_title_urls(request, supported_request_languages)
-        for title_index, (title_name, title_url) in enumerate(titles[:MAX_TITLES_COUNT]):
+        titles = self.__fetch_search_title_urls(request)
+        for title_index, (title_name, title_url) in enumerate(titles[:MAX_TITLE_RESULTS]):
             self._logger.info("Processing search results for title %s" % title_name)
             http_request = HttpRequest(title_url)
             http_request.sleep_before = timedelta(seconds=1) if title_index > 0 else None
@@ -145,8 +171,9 @@ class Addic7edSourceProvider(SourceProvider):
             for result_img in results_img:
                 result_tbody = result_img.find_parent("tbody")
                 result = SearchResult()
-                result.language = Language(result_tbody.select_one("td.language").get_text(strip=True))
-                if not result.language in supported_request_languages:
+                result.language = self._supported_languages.get_internal_by_name(
+                    result_tbody.select_one("td.language").get_text(strip=True))
+                if not result.language in request_internal_languages:
                     continue
                 result.id = result_tbody.select_one('a.buttonDownload[href^="/original/"]').attrs["href"]
                 result.title = title_name
@@ -167,5 +194,5 @@ class Addic7edSourceProvider(SourceProvider):
     def _get(self, request: GetRequest) -> List[GetResult]:
         http_request = HttpRequest(request.search_result_id)
         http_response = self._http_client.exchange(http_request)
-        results = self._process_subtitles_data(http_response.file_name, http_response.data)
+        results = self._process_get_subtitles_data(http_response.file_name, http_response.data)
         return results

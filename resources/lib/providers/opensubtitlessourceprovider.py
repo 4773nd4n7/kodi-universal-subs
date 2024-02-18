@@ -1,139 +1,169 @@
 # -*- coding: utf-8 -*-
 
-import math
 import re
 from datetime import timedelta
-from typing import List, Set, Tuple
+from typing import Dict, List, Tuple, Union
 from urllib.parse import quote
 
 from bs4 import BeautifulSoup
 
-from resources.lib.httpclient import HttpRequest
-from resources.lib.language import Language
+from resources.lib.common.language import Language
+from resources.lib.common.mappedlanguages import MappedLanguages
+from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
 from resources.lib.providers.searchrequest import SearchRequest
 from resources.lib.providers.searchresult import SearchResult
-from resources.lib.providers.sourceprovider import (SourceProvider,
-                                                    find_text_between,
-                                                    normalize_white_space,
-                                                    unescape_html)
-from resources.lib.settings import Settings
+from resources.lib.providers.sourceprovider import SourceProvider
+from resources.lib.utils.httpclient import HttpRequest
+from resources.lib.utils.text import normalize_white_space
 
-MAX_TITLES_COUNT = 5
+MAX_TITLE_RESULTS = 5
+
+CHINESE_CANTONESE = Language("Chinese (Cantonese)", three_letter_code="zhc", standard=False)
+CHINESE_SIMPLIFIED = Language("Chinese (simplified)", three_letter_code="chi", standard=False)
+CHINESE_TRADITIONAL = Language("Chinese (traditional)", three_letter_code="zht", standard=False)
+CHINESE_BILINGUAL = Language("Chinese bilingual", three_letter_code="zhe", standard=False)
+KHMER = Language("Khmer", three_letter_code="khm", standard=False)
+MONTENEGRIN = Language("Montenegrin", three_letter_code="mne", standard=False)
+ODIA = Language("Odia", three_letter_code="ori", standard=False)
+PORTUGUESE_BR = Language("Portuguese (BR)", three_letter_code="pob", standard=False)
+PORTUGUESE_MZ = Language("Portuguese (MZ)", three_letter_code="pom", standard=False)
+SERBIAN = Language("Serbian", three_letter_code="scc", standard=False)
+SINHALESE = Language("Sinhalese", three_letter_code="sin", standard=False)
+SPANISH_EU = Language("Spanish (EU)", three_letter_code="spn", standard=False)
+SPANISH_LA = Language("Spanish (LA)", three_letter_code="spl", standard=False)
+TOKI_PONA = Language("Toki Pona", three_letter_code="tok", standard=False)
 
 
-SUPPORTED_LANGUAGES = {
-    "Abkhazian": "abk",
-    "Afrikaans": "afr",
-    "Albanian": "alb",
-    "Amharic": "amh",
-    "Arabic": "ara",
-    "Aragonese": "arg",
-    "Armenian": "arm",
-    "Assamese": "asm",
-    "Asturian": "ast",
-    "Azerbaijani": "aze",
-    "Basque": "baq",
-    "Belarusian": "bel",
-    "Bengali": "ben",
-    "Bosnian": "bos",
-    "Breton": "bre",
-    "Bulgarian": "bul",
-    "Burmese": "bur",
-    "Catalan": "cat",
-    "Chinese Simplified": "chi",
-    "Chinese Traditional": "zht",
-    "Chinese Bilingual": "zhe",
-    "Croatian": "hrv",
-    "Czech": "cze",
-    "Danish": "dan",
-    "Dari": "prs",
-    "Dutch": "dut",
-    "English": "eng",
-    "Esperanto": "epo",
-    "Estonian": "est",
-    "Extremaduran": "ext",
-    "Finnish": "fin",
-    "French": "fre",
-    "Gaelic": "gla",
-    "Galician": "glg",
-    "Georgian": "geo",
-    "German": "ger",
-    "Greek": "ell",
-    "Hebrew": "heb",
-    "Hindi": "hin",
-    "Hungarian": "hun",
-    "Icelandic": "ice",
-    "Igbo": "ibo",
-    "Indonesian": "ind",
-    "Interlingua": "ina",
-    "Irish": "gle",
-    "Italian": "ita",
-    "Japanese": "jpn",
-    "Kannada": "kan",
-    "Kazakh": "kaz",
-    "Khmer": "khm",
-    "Korean": "kor",
-    "Kurdish": "kur",
-    "Latvian": "lav",
-    "Lithuanian": "lit",
-    "Luxembourgish": "ltz",
-    "Macedonian": "mac",
-    "Malay": "may",
-    "Malayalam": "mal",
-    "Manipuri": "mni",
-    "Marathi": "mar",
-    "Mongolian": "mon",
-    "Montenegrin": "mne",
-    "Navajo": "nav",
-    "Nepali": "nep",
-    "Northern Sami": "sme",
-    "Norwegian": "nor",
-    "Occitan": "oci",
-    "Odia": "ori",
-    "Persian": "per",
-    "Polish": "pol",
-    "Portuguese (BR)": "pob",
-    "Portuguese (MZ)": "pom",
-    "Portuguese": "por",
-    "Pushto": "pus",
-    "Romanian": "rum",
-    "Russian": "rus",
-    "Santali": "sat",
-    "Serbian": "scc",
-    "Sindhi": "snd",
-    "Sinhalese": "sin",
-    "Slovak": "slo",
-    "Slovenian": "slv",
-    "Somali": "som",
-    "Spanish (EU)": "spn",
-    "Spanish (LA)": "spl",
-    "Spanish": "spa",
-    "Swahili": "swa",
-    "Swedish": "swe",
-    "Syriac": "syr",
-    "Tagalog": "tgl",
-    "Tamil": "tam",
-    "Tatar": "tat",
-    "Telugu": "tel",
-    "Thai": "tha",
-    "Toki Pona": "tok",
-    "Turkish": "tur",
-    "Turkmen": "tuk",
-    "Ukrainian": "ukr",
-    "Urdu": "urd",
-    "Uzbek": "uzb",
-    "Vietnamese": "vie",
-    "Welsh": "wel",
+SUPPORTED_LANGUAGES: List[Language] = [
+    Language("Abkhazian", three_letter_code="abk"),
+    Language("Afrikaans", three_letter_code="afr"),
+    Language("Albanian", three_letter_code="alb"),
+    Language("Amharic", three_letter_code="amh"),
+    Language("Arabic", three_letter_code="ara"),
+    Language("Aragonese", three_letter_code="arg"),
+    Language("Armenian", three_letter_code="arm"),
+    Language("Assamese", three_letter_code="asm"),
+    Language("Asturian", three_letter_code="ast"),
+    Language("Azerbaijani", three_letter_code="aze"),
+    Language("Basque", three_letter_code="baq"),
+    Language("Belarusian", three_letter_code="bel"),
+    Language("Bengali", three_letter_code="ben"),
+    Language("Bosnian", three_letter_code="bos"),
+    Language("Breton", three_letter_code="bre"),
+    Language("Bulgarian", three_letter_code="bul"),
+    Language("Burmese", three_letter_code="bur"),
+    Language("Catalan", three_letter_code="cat"),
+    CHINESE_CANTONESE,
+    CHINESE_SIMPLIFIED,
+    CHINESE_TRADITIONAL,
+    CHINESE_BILINGUAL,
+    Language("Croatian", three_letter_code="hrv"),
+    Language("Czech", three_letter_code="cze"),
+    Language("Danish", three_letter_code="dan"),
+    Language("Dari", three_letter_code="prs"),
+    Language("Dutch", three_letter_code="dut"),
+    Language("English", three_letter_code="eng"),
+    Language("Esperanto", three_letter_code="epo"),
+    Language("Estonian", three_letter_code="est"),
+    Language("Extremaduran", three_letter_code="ext"),
+    Language("Finnish", three_letter_code="fin"),
+    Language("French", three_letter_code="fre"),
+    Language("Gaelic", three_letter_code="gla"),
+    Language("Galician", three_letter_code="glg"),
+    Language("Georgian", three_letter_code="geo"),
+    Language("German", three_letter_code="ger"),
+    Language("Greek", three_letter_code="ell"),
+    Language("Hebrew", three_letter_code="heb"),
+    Language("Hindi", three_letter_code="hin"),
+    Language("Hungarian", three_letter_code="hun"),
+    Language("Icelandic", three_letter_code="ice"),
+    Language("Igbo", three_letter_code="ibo"),
+    Language("Indonesian", three_letter_code="ind"),
+    Language("Interlingua", three_letter_code="ina"),
+    Language("Irish", three_letter_code="gle"),
+    Language("Italian", three_letter_code="ita"),
+    Language("Japanese", three_letter_code="jpn"),
+    Language("Kannada", three_letter_code="kan"),
+    Language("Kazakh", three_letter_code="kaz"),
+    KHMER,
+    Language("Korean", three_letter_code="kor"),
+    Language("Kurdish", three_letter_code="kur"),
+    Language("Latvian", three_letter_code="lav"),
+    Language("Lithuanian", three_letter_code="lit"),
+    Language("Luxembourgish", three_letter_code="ltz"),
+    Language("Macedonian", three_letter_code="mac"),
+    Language("Malay", three_letter_code="may"),
+    Language("Malayalam", three_letter_code="mal"),
+    Language("Manipuri", three_letter_code="mni"),
+    Language("Marathi", three_letter_code="mar"),
+    Language("Mongolian", three_letter_code="mon"),
+    MONTENEGRIN,
+    Language("Navajo", three_letter_code="nav"),
+    Language("Nepali", three_letter_code="nep"),
+    Language("Northern Sami", three_letter_code="sme"),
+    Language("Norwegian", three_letter_code="nor"),
+    Language("Occitan", three_letter_code="oci"),
+    ODIA,
+    Language("Persian", three_letter_code="per"),
+    Language("Polish", three_letter_code="pol"),
+    PORTUGUESE_BR,
+    PORTUGUESE_MZ,
+    Language("Portuguese", three_letter_code="por"),
+    Language("Pashto", three_letter_code="pus"),
+    Language("Romanian", three_letter_code="rum"),
+    Language("Russian", three_letter_code="rus"),
+    Language("Santali", three_letter_code="sat"),
+    SERBIAN,
+    Language("Sindhi", three_letter_code="snd"),
+    SINHALESE,
+    Language("Slovak", three_letter_code="slo"),
+    Language("Slovenian", three_letter_code="slv"),
+    Language("Somali", three_letter_code="som"),
+    SPANISH_EU,
+    SPANISH_LA,
+    Language("Spanish", three_letter_code="spa"),
+    Language("Swahili", three_letter_code="swa"),
+    Language("Swedish", three_letter_code="swe"),
+    Language("Syriac", three_letter_code="syr"),
+    Language("Tagalog", three_letter_code="tgl"),
+    Language("Tamil", three_letter_code="tam"),
+    Language("Tatar", three_letter_code="tat"),
+    Language("Telugu", three_letter_code="tel"),
+    Language("Thai", three_letter_code="tha"),
+    TOKI_PONA,
+    Language("Turkish", three_letter_code="tur"),
+    Language("Turkmen", three_letter_code="tuk"),
+    Language("Ukrainian", three_letter_code="ukr"),
+    Language("Urdu", three_letter_code="urd"),
+    Language("Uzbek", three_letter_code="uzb"),
+    Language("Vietnamese", three_letter_code="vie"),
+    Language("Welsh", three_letter_code="wel"),
+]
+
+LANGUAGE_MAPPINGS: Dict[Language, Union[Language, List[Language]]] = {
+    CHINESE_CANTONESE: Language.chinese,
+    CHINESE_SIMPLIFIED: Language.chinese,
+    CHINESE_TRADITIONAL: Language.chinese,
+    CHINESE_BILINGUAL: Language.chinese,
+    KHMER: Language.central_khmer,
+    MONTENEGRIN: Language.montenegrin,
+    ODIA: Language.oriya,
+    PORTUGUESE_BR: Language.portuguese,
+    PORTUGUESE_MZ: Language.portuguese,
+    SERBIAN: Language.serbian,
+    SINHALESE: Language.sinhala,
+    SPANISH_EU: Language.spanish,
+    SPANISH_LA: Language.spanish,
+    TOKI_PONA: [],
 }
 
 
 class OpenSubtitlesSourceProvider(SourceProvider):
 
     def __init__(self, settings: Settings):
-        super().__init__(settings)
-        self._supported_languages = Language.build_languages_set(SUPPORTED_LANGUAGES)
+        super().__init__(settings, MappedLanguages(SUPPORTED_LANGUAGES, LANGUAGE_MAPPINGS))
         self._http_client.base_url = "https://www.opensubtitles.org"
         self._http_client.default_headers["Host"] = "www.opensubtitles.org"
         self._http_client.default_headers["Referer"] = "https://www.opensubtitles.org"
@@ -149,14 +179,10 @@ class OpenSubtitlesSourceProvider(SourceProvider):
     def short_name(self) -> str:
         return "OS"
 
-    @property
-    def supported_languages(self) -> Set[Language]:
-        return self._supported_languages
-
-    def __fetch_search_title_urls(self, request: SearchRequest, supported_request_languages: List[Language]) -> List[Tuple[str, str]]:
+    def __fetch_search_title_urls(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[Tuple[str, str]]:
         search_term = self._build_search_term(request)
-        language_codes = ",".join([l.three_letter_code for l in supported_request_languages]) \
-            if supported_request_languages else 'all'
+        language_codes = ",".join([l.three_letter_code for l in request_internal_languages]) \
+            if request_internal_languages else 'all'
         http_request = HttpRequest("/en/search2/sublanguageid-%s/moviename-%s" % (language_codes, quote(search_term)))
         http_request.follow_redirects = False
         http_response = self._http_client.exchange(http_request)
@@ -192,19 +218,19 @@ class OpenSubtitlesSourceProvider(SourceProvider):
         if self._settings.exclude_splitted_subtitles and int(match["cds"]) > 1:
             return None
         result.title = "%s (%s)" % (match['title'], match["year"])
-        result.language = Language(match["language"])
+        result.language = self._supported_languages.get_internal_by_name(match["language"])
         result.is_hearing_impaired = result_html.select_one('h1').parent.select_one(
             'img[src$="/icons/hearing_impaired.gif"]') is not None
         details_tag = next(fs for fs in result_html.select("fieldset")
                            if fs.find("legend").get_text(strip=True) == "Subtitle details")
         result.downloads = details_tag.select_one('a[title="downloaded"]').get_text(strip=True)
-        result.downloads = int(re.sub("[^\d]", "", result.downloads))
+        result.downloads = int(re.sub(r"[^\d]", "", result.downloads))
         result.id = details_tag.select_one('a[download="download"]').attrs["href"]
         release_image_tag = details_tag.select_one('img[title="Release name"]')
         result.release_info = normalize_white_space(release_image_tag.parent.get_text(strip=True))
         author_image_tag = details_tag.select_one('img[title="Uploader"]')
         result.author = author_image_tag.parent.get_text(strip=True)
-        if result.author == "Anonymous":
+        if not result.author or result.author == "Anonymous":
             result.author = None
         result.rating = float(len(details_tag.select('div#subvote img[src$="/icons/star-on.gif"]')))
         return result
@@ -214,7 +240,7 @@ class OpenSubtitlesSourceProvider(SourceProvider):
         results: List[SearchResult] = []
         for result_tr_tag in result_tr_tags:
             if len(result_tr_tag.find_all("td", recursive=False)) < 9:
-                continue  # skip add rows
+                continue  # skip ad rows
             cds = int(re.sub("CDS?", "", result_tr_tag.select_one("td:nth-child(3)").get_text(strip=1)))
             if self._settings.exclude_splitted_subtitles and cds > 1:
                 continue  # skip multi cd results
@@ -227,15 +253,16 @@ class OpenSubtitlesSourceProvider(SourceProvider):
             result.id = download_anchor.attrs["href"]
             result.downloads = int(re.sub(r"[^\d]", "", download_anchor.get_text(strip=True)))
             result.author = result_tr_tag.select_one('a[href^="/en/profile/iduser-"]').get_text(strip=True)
-            result.language = Language(result_tr_tag.select_one("div.flag").parent.attrs["title"])
+            result.language = self._supported_languages.get_internal_by_name(
+                result_tr_tag.select_one("div.flag").parent.attrs["title"])
             result.rating = float(result_tr_tag.select_one('span[title$=" votes"]').get_text(strip=True))
             results.append(result)
         return results
 
-    def _fetch_search_results(self, request: SearchRequest, supported_request_languages: List[Language]) -> List[SearchResult]:
+    def _fetch_search_results(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[SearchResult]:
         results: List[SearchResult] = []
-        titles = self.__fetch_search_title_urls(request, supported_request_languages)
-        for title_index, (title_name, title_url) in enumerate(titles[:MAX_TITLES_COUNT]):
+        titles = self.__fetch_search_title_urls(request, request_internal_languages)
+        for title_index, (title_name, title_url) in enumerate(titles[:MAX_TITLE_RESULTS]):
             self._logger.info("Processing search results for title %s" % title_name)
             http_request = HttpRequest(title_url, follow_redirects=False)
             http_request.sleep_before = timedelta(seconds=1) if title_index > 0 else None
@@ -247,7 +274,6 @@ class OpenSubtitlesSourceProvider(SourceProvider):
                 if result:
                     results.append(result)
             else:
-                http_response.write_into(self._settings.addon_user_path.joinpath("opensubs.html"))
                 results.extend(self.__parse_many_search_results(http_response.get_data_as_html()))
             if request.max_results and len(results) >= request.max_results:
                 results = results[:request.max_results]
@@ -257,5 +283,5 @@ class OpenSubtitlesSourceProvider(SourceProvider):
     def _get(self, request: GetRequest) -> List[GetResult]:
         http_request = HttpRequest(request.search_result_id)
         http_response = self._http_client.exchange(http_request)
-        results = self._process_subtitles_data(http_response.file_name, http_response.data)
+        results = self._process_get_subtitles_data(http_response.file_name, http_response.data)
         return results

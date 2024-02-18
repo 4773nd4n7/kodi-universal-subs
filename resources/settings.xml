@@ -11,6 +11,7 @@
                     <constraints>
                         <options>
                             <option label="OpenSubtitles.org | OS">OpenSubtitles</option>
+                            <option label="Subscene | SC">Subscene</option>
                             <option label="Addic7ed.com | AD7">Addic7ed</option>
                             <option label="SubDivX | SDX">SubDivX</option>
                             <option label="Podnapisi.NET | PN">PodnapisiNET</option>
@@ -63,7 +64,7 @@
             <group id="1">
                 <setting id="file_system_provider_path" type="path" label="50001" help="50001">
                     <level>0</level>
-                    <default>-1</default>
+                    <default>/select/path/to/local/subs</default>
                     <constraints>
                         <writable>false</writable>
                         <allowempty>true</allowempty>

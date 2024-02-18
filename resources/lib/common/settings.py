@@ -4,13 +4,12 @@ from datetime import timedelta
 from pathlib import Path
 from typing import List
 
-from resources.lib.language import Language
+from resources.lib.common.language import Language
 
 
 class Settings:
 
     addon_id: str
-    addon_version: str
     addon_path: Path
     addon_user_path: Path
 

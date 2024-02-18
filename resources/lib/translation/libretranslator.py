@@ -1,61 +1,69 @@
 # -*- coding: utf-8 -*-
 
 import re
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Union
 
-from resources.lib.httpclient import HttpRequest
-from resources.lib.json import from_json
-from resources.lib.language import Language
-from resources.lib.settings import Settings
+from resources.lib.common.language import Language
+from resources.lib.common.mappedlanguages import MappedLanguages
+from resources.lib.common.settings import Settings
 from resources.lib.translation.translator import Translator
+from resources.lib.utils.httpclient import HttpRequest
 
-SUPPORTED_LANGUAGES: Dict[str, str] = {
-    "Albanian": "sq",
-    "Arabic": "ar",
-    "Azerbaijani": "az",
-    "Bengali": "bn",
-    "Bulgarian": "bg",
-    "Catalan": "ca",
-    "Chinese (Traditional)": "zt",
-    "Chinese": "zh",
-    "Czech": "cs",
-    "Danish": "da",
-    "Dutch": "nl",
-    "English": "en",
-    "Esperanto": "eo",
-    "Estonian": "et",
-    "Finnish": "fi",
-    "French": "fr",
-    "German": "de",
-    "Greek": "el",
-    "Hebrew": "he",
-    "Hindi": "hi",
-    "Hungarian": "hu",
-    "Indonesian": "id",
-    "Irish": "ga",
-    "Italian": "it",
-    "Japanese": "ja",
-    "Korean": "ko",
-    "Latvian": "lv",
-    "Lithuanian": "lt",
-    "Malay": "ms",
-    "Norwegian": "nb",
-    "Persian": "fa",
-    "Polish": "pl",
-    "Portuguese": "pt",
-    "Romanian": "ro",
-    "Russian": "ru",
-    "Serbian": "sr",
-    "Slovak": "sk",
-    "Slovenian": "sl",
-    "Spanish": "es",
-    "Swedish": "sv",
-    "Tagalog": "tl",
-    "Thai": "th",
-    "Turkish": "tr",
-    "Ukrainian": "uk",
-    "Urdu": "ur",
-    "Vietnamese": "vi",
+CHINESE_TRADITIONAL = Language("Chinese (Traditional)", two_letter_code="zt", standard=False)
+NORWEGIAN_BOKMAL = Language("Norwegian Bokmål", two_letter_code="nb", standard=False)
+
+SUPPORTED_LANGUAGES: List[Language] = [
+    Language("Albanian", two_letter_code="sq"),
+    Language("Arabic", two_letter_code="ar"),
+    Language("Azerbaijani", two_letter_code="az"),
+    Language("Bengali", two_letter_code="bn"),
+    Language("Bulgarian", two_letter_code="bg"),
+    Language("Catalan", two_letter_code="ca"),
+    CHINESE_TRADITIONAL,
+    Language("Chinese", two_letter_code="zh"),
+    Language("Czech", two_letter_code="cs"),
+    Language("Danish", two_letter_code="da"),
+    Language("Dutch", two_letter_code="nl"),
+    Language("English", two_letter_code="en"),
+    Language("Esperanto", two_letter_code="eo"),
+    Language("Estonian", two_letter_code="et"),
+    Language("Finnish", two_letter_code="fi"),
+    Language("French", two_letter_code="fr"),
+    Language("German", two_letter_code="de"),
+    Language("Greek", two_letter_code="el"),
+    Language("Hebrew", two_letter_code="he"),
+    Language("Hindi", two_letter_code="hi"),
+    Language("Hungarian", two_letter_code="hu"),
+    Language("Indonesian", two_letter_code="id"),
+    Language("Irish", two_letter_code="ga"),
+    Language("Italian", two_letter_code="it"),
+    Language("Japanese", two_letter_code="ja"),
+    Language("Korean", two_letter_code="ko"),
+    Language("Latvian", two_letter_code="lv"),
+    Language("Lithuanian", two_letter_code="lt"),
+    Language("Malay", two_letter_code="ms"),
+    NORWEGIAN_BOKMAL,
+    Language("Persian", two_letter_code="fa"),
+    Language("Polish", two_letter_code="pl"),
+    Language("Portuguese", two_letter_code="pt"),
+    Language("Romanian", two_letter_code="ro"),
+    Language("Russian", two_letter_code="ru"),
+    Language("Serbian", two_letter_code="sr"),
+    Language("Slovak", two_letter_code="sk"),
+    Language("Slovenian", two_letter_code="sl"),
+    Language("Spanish", two_letter_code="es"),
+    Language("Swedish", two_letter_code="sv"),
+    Language("Tagalog", two_letter_code="tl"),
+    Language("Thai", two_letter_code="th"),
+    Language("Turkish", two_letter_code="tr"),
+    Language("Ukrainian", two_letter_code="uk"),
+    Language("Urdu", two_letter_code="ur"),
+    Language("Vietnamese", two_letter_code="vi"),
+]
+
+LANGUAGE_MAPPINGS: Dict[Language, Union[Language, List[Language]]] = {
+    CHINESE_TRADITIONAL: Language.chinese,
+    NORWEGIAN_BOKMAL: Language.norwegian,
 }
 
 SECRET_RE = re.compile(r'\sapiSecret: "(?P<secret>[^"]+)"', re.IGNORECASE | re.DOTALL)
@@ -64,8 +72,7 @@ SECRET_RE = re.compile(r'\sapiSecret: "(?P<secret>[^"]+)"', re.IGNORECASE | re.D
 class LibreTranslator(Translator):
 
     def __init__(self, settings: Settings) -> None:
-        super().__init__(settings)
-        self.supported_languages: Set[Language] = Language.build_languages_set(SUPPORTED_LANGUAGES)
+        super().__init__(settings, MappedLanguages(SUPPORTED_LANGUAGES, LANGUAGE_MAPPINGS))
 
     @property
     def name(self) -> str:
@@ -74,9 +81,6 @@ class LibreTranslator(Translator):
     @property
     def short_name(self) -> str:
         return "LB"
-
-    def supports_translation(self, from_language: Language, to_language: Language) -> bool:
-        return from_language in self.supported_languages and to_language in self.supported_languages
 
     def __fetch_secret(self) -> str:
         request = HttpRequest("https://libretranslate.com/js/app.js?v=1.5.5")
@@ -117,10 +121,11 @@ class LibreTranslator(Translator):
             translation = self.__fetch_translation(from_language, to_language, text, secret)
         return [translation, secret]
 
-    def _translate(self, from_language: Language, to_language: Language, texts: List[str]) -> List[str]:
+    def _translate(self, internal_from_language: Language, internal_to_language: Language, texts: List[str]) -> List[str]:
         return self._translate_in_blocks(
             texts,
             2000,
             "\n\n",
-            lambda text, s: self.fetch_translation_and_secret(from_language, to_language, text, s),
+            lambda text, secret: self.fetch_translation_and_secret(
+                internal_from_language, internal_to_language, text, secret),
             [self.__fetch_secret()])

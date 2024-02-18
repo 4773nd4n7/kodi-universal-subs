@@ -7,12 +7,12 @@
 		<import addon="script.module.beautifulsoup4" />
 		<import addon="script.module.cachetools"/>
 		<import addon="script.module.chardet" />
-		<import addon="script.module.future" />
-		<import addon="script.module.html2text" />
 		<import addon="script.module.html5lib"/>
 		<import addon="script.module.typing_extensions" />
-		<import addon="script.module.xmltodict" />
 		<import addon="script.module.yaml" />
+		<import addon="script.module.unidecode" />
+		<import addon="vfs.libarchive" />
+		<import addon="vfs.rar" />
 	</requires>
 	<extension point="xbmc.subtitle.module" library="main.py" />
 	<extension point="xbmc.addon.metadata">

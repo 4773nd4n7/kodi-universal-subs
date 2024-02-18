@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import re
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List
 
-from resources.lib.httpclient import HttpRequest
-from resources.lib.language import Language
+from resources.lib.common.language import Language
+from resources.lib.common.mappedlanguages import MappedLanguages
+from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
 from resources.lib.providers.searchrequest import SearchRequest
 from resources.lib.providers.searchresult import SearchResult
-from resources.lib.providers.sourceprovider import (SourceProvider,
-                                                    unescape_html)
-from resources.lib.settings import Settings
+from resources.lib.providers.sourceprovider import SourceProvider
+from resources.lib.utils.httpclient import HttpRequest
+from resources.lib.utils.text import unescape_html
 
-START_HTML = '<i class="fa fa-star rating-color">'
+STAR_HTML = '<i class="fa fa-star rating-color">'
 
 RE_FORCED_SUBTITLE_FILE_NAME = re.compile(r"\b(forced|forzado)\b", re.IGNORECASE)
 
@@ -21,8 +22,7 @@ RE_FORCED_SUBTITLE_FILE_NAME = re.compile(r"\b(forced|forzado)\b", re.IGNORECASE
 class SubDivXSourceProvider(SourceProvider):
 
     def __init__(self, settings: Settings):
-        super().__init__(settings)
-        self._supported_languages = set([Language.spanish])
+        super().__init__(settings, MappedLanguages([Language.spanish]))
         self._http_client.base_url = "https://www.subdivx.com/"
 
     @property
@@ -34,14 +34,10 @@ class SubDivXSourceProvider(SourceProvider):
         return "SDX"
 
     @property
-    def supported_languages(self) -> Set[Language]:
-        return self._supported_languages
-
-    @property
-    def overrides_ratings_from_downloads(self) -> bool:
+    def _overrides_ratings_from_downloads(self) -> bool:
         return True
 
-    def _fetch_search_results(self, request: SearchRequest, supported_request_languages: List[Language]) -> List[SearchResult]:
+    def _fetch_search_results(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[SearchResult]:
         http_request = HttpRequest("/inc/ajax.php", "POST")
         http_request.set_urlencoded_form_data(
             {"tabla": "resultados", "buscar": self._build_search_term(request)})
@@ -57,7 +53,7 @@ class SubDivXSourceProvider(SourceProvider):
             result.release_info = unescape_html(re.sub(r"</?[^>]+>", "", result_data["descripcion"]))
             result.author = re.sub(r".*/>\s*([^<]+)\s*</a>\s*</div>.*", r"\1", result_data.get("nick", ""))
             result.downloads = result_data["descargas"]
-            result.rating = float(str(result_data.get("calificacion", "")).count(START_HTML))
+            result.rating = float(str(result_data.get("calificacion", "")).count(STAR_HTML))  # count number of stars
             result.language = Language.spanish
             results.append(result)
             if request.max_results and len(results) >= request.max_results:
@@ -71,5 +67,5 @@ class SubDivXSourceProvider(SourceProvider):
         http_request = HttpRequest("/descargar.php")
         http_request.add_url_query_params({"id": request.search_result_id})
         http_response = self._http_client.exchange(http_request)
-        results = self._process_subtitles_data(http_response.file_name, http_response.data)
+        results = self._process_get_subtitles_data(http_response.file_name, http_response.data)
         return results

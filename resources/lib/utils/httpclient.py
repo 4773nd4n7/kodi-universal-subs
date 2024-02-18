@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import base64
 import logging
 import os
 import os.path
@@ -21,8 +20,8 @@ from uuid import uuid4
 import chardet
 from bs4 import BeautifulSoup, Tag
 
-from resources.lib.cache import Cache
-from resources.lib.json import from_json, to_json
+from resources.lib.utils.cache import Cache
+from resources.lib.utils.json import from_json, to_json
 
 HTTP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
 

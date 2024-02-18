@@ -3,7 +3,7 @@
 import copy
 from typing import List
 
-from resources.lib.language import Language
+from resources.lib.common.language import Language
 from resources.lib.providers.decoratorprovider import DecoratorProvider
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
@@ -11,7 +11,7 @@ from resources.lib.providers.provider import Provider
 from resources.lib.providers.searchrequest import SearchRequest
 from resources.lib.providers.searchresult import SearchResult
 from resources.lib.translation.subtitletranslator import SubtitleTranslator
-from resources.lib.yaml import to_yaml
+from resources.lib.utils.yaml import to_yaml
 
 
 class TranslationsDecoratorProvider(DecoratorProvider):
@@ -38,16 +38,16 @@ class TranslationsDecoratorProvider(DecoratorProvider):
         result = copy.deepcopy(source_result)
         result.id = "%s|%s|%s|%s" % (
             translator.name if translator else '',
-            source_result.language.two_letter_code,
-            language.two_letter_code,
+            source_result.language.three_letter_code,
+            language.three_letter_code,
             source_result.id)
         result.language = language
         if translator:
             result.provider_name = translator.name + "|" + result.provider_name
             result.title = "%s %s:%s | %s" % (
                 translator.short_name if translator else '',
-                source_result.language.two_letter_code,
-                language.two_letter_code,
+                source_result.language.three_letter_code,
+                language.three_letter_code,
                 result.title)
         return result
 
@@ -68,7 +68,8 @@ class TranslationsDecoratorProvider(DecoratorProvider):
                     if translator.supports_translation(source_result.language, request_language):
                         translation_result = self.__build_search_result(source_result, request_language, translator)
                         translation_results.append(translation_result)
-        self._logger.info("Added translation search results:\n%s", to_yaml(translation_results))
+        self._logger.info("Added %s translation search result(s):\n%s",
+                          len(translation_results), to_yaml(translation_results))
         return original_results + translation_results
 
     def build_source_get_request(self, request: GetRequest) -> GetRequest:
@@ -77,9 +78,10 @@ class TranslationsDecoratorProvider(DecoratorProvider):
         return request
 
     def _transform_get_results(self, request: GetRequest, source_request: GetRequest, source_results: List[GetResult]) -> List[GetResult]:
+
         search_result_id_parts = request.search_result_id.split("|", 3)
-        from_language = Language.from_2_or_3_letter_code(search_result_id_parts[1])
-        to_language = Language.from_2_or_3_letter_code(search_result_id_parts[2])
+        from_language = Language.from_three_letter_code(search_result_id_parts[1])
+        to_language = Language.from_three_letter_code(search_result_id_parts[2])
         if from_language == to_language:
             return source_results
         translator = next(t for t in self.translators if t.name == search_result_id_parts[0])
@@ -87,11 +89,15 @@ class TranslationsDecoratorProvider(DecoratorProvider):
             return []
         translation_results: List[GetResult] = []
         for source_result in source_results:
+            self._logger.info("Translating \"%s\" from %s to %s", source_result.file_name, from_language, to_language)
             try:
                 translation_result = translator.translate(source_result, from_language, to_language)
                 translation_result.provider_name = self.name + "|" + translation_result.provider_name
                 translation_results.append(translation_result)
+                self._logger.info("Finished translating \"%s\" from %s to %s", source_result.file_name,
+                                  from_language, to_language)
             except:
-                self._logger.error("Error translating result '%s'" % source_result.file_name, exc_info=True)
+                self._logger.error("Error translating result \"%s\" from %s to %s" % source_result.file_name,
+                                   from_language, to_language, exc_info=True)
                 pass
         return translation_results

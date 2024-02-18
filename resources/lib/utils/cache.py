@@ -7,7 +7,7 @@ from typing import Callable, TypeVar
 
 from cachetools import TTLCache
 
-from resources.lib.persistentcache import PersistentCache
+from resources.lib.utils.persistentcache import PersistentCache
 
 T = TypeVar('T')
 
@@ -18,7 +18,6 @@ class Cache:
         assert cache_name
         self._logger: logging.Logger = logging.getLogger(cache_name)
         if cache_ttl.total_seconds() > 0:
-            self._cache_keys_prefix = cache_name + "|"
             self._cache = PersistentCache(
                 TTLCache,
                 filename=storage_path.as_posix(),
@@ -31,7 +30,7 @@ class Cache:
         if self._cache is None:
             self._logger.debug("Returning from default (disabled) value for '%s'" % (key))
             return default
-        value = self._cache.get(self._cache_keys_prefix + key)
+        value = self._cache.get(key)
         if value:
             self._logger.debug("Returning from cache value for '%s'" % (key))
             return value
@@ -43,7 +42,7 @@ class Cache:
             value = initializer()
             self._logger.debug("Returning from initializer (disabled) value for '%s'" % (key))
             return value
-        value = self._cache.get(self._cache_keys_prefix + key)
+        value = self._cache.get(key)
         if value:
             self._logger.debug("Returning from cache value for '%s'" % (key))
             return value
@@ -54,8 +53,8 @@ class Cache:
 
     def set(self, key, value) -> None:
         if self._cache is not None:
-            self._cache[self._cache_keys_prefix + key] = value
+            self._cache[key] = value
 
     def delete(self, key) -> None:
         if self._cache is not None:
-            self._cache.delete(self._cache_keys_prefix + key)
+            self._cache.delete(key)

@@ -3,6 +3,7 @@
 import logging
 from typing import Dict, List
 
+from resources.lib.common.settings import Settings
 from resources.lib.providers.addic7edsourceprovider import \
     Addic7edSourceProvider
 from resources.lib.providers.compositeprovider import CompositeProvider
@@ -16,7 +17,6 @@ from resources.lib.providers.provider import Provider
 from resources.lib.providers.subdivxsourceprovider import SubDivXSourceProvider
 from resources.lib.providers.translationsdecoratorprovider import \
     TranslationsDecoratorProvider
-from resources.lib.settings import Settings
 from resources.lib.translation.translatorsregistry import TranslatorsRegistry
 
 

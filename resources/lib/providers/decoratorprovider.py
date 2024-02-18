@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from abc import abstractmethod
 from typing import List
 
 from resources.lib.providers.getrequest import GetRequest

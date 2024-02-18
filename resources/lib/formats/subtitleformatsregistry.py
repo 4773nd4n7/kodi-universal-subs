@@ -14,7 +14,6 @@ from resources.lib.formats.subtitleformat import Subtitle, SubtitleFormat
 from resources.lib.formats.webvttsubtitleformat import WebVTTSubtitleFormat
 from resources.lib.formats.youtubesbvsubtitleformat import \
     YouTubeSBVSubtitleFormat
-from resources.lib.providers.getresult import GetResult
 
 
 class UnsupportedSubtitleFormatException(Exception):

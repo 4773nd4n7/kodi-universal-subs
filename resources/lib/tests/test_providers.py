@@ -14,9 +14,8 @@ if __name__ == '__main__' and not __package__:
     except ValueError:
         pass
 
-from ..compression import Compression
-from ..language import Language
-from ..logging import init_logging
+from ..common.language import Language
+from ..common.settings import Settings
 from ..providers.addic7edsourceprovider import Addic7edSourceProvider
 from ..providers.filesystemsourceprovider import FileSystemSourceProvider
 from ..providers.getrequest import GetRequest
@@ -25,32 +24,30 @@ from ..providers.podnapisisourceprovider import PodnapisiSourceProvider
 from ..providers.providersregistry import ProvidersRegistry
 from ..providers.searchrequest import SearchRequest
 from ..providers.subdivxsourceprovider import SubDivXSourceProvider
-from ..providers.translationsdecoratorprovider import \
-    TranslationsDecoratorProvider
-from ..settings import Settings
-from ..yaml import to_yaml
+from ..utils.compression import Compression
+from ..utils.logging import init_logging_from_yaml
+from ..utils.yaml import to_yaml
 
 Compression.seven_zip_exec_path = Path("C:/Program Files/7-Zip/7z.exe")
 
 
-settings: Settings = Settings()
+settings = Settings()
 settings.addon_id = "service.subtitles.universalsubs"
-settings.addon_version = "0.0.1"
 settings.addon_path = Path(os.environ["UNIVERSAL_SUBS_PATH"]).resolve()
 settings.addon_user_path = Path(os.environ["UNIVERSAL_SUBS_USER_PATH"]).resolve()
 settings.include_author_on_results = False
-settings.providers = ["FileSystem", "OpenSubtitles", "PodnapisiNET", "SubDivX", "Addic7ed"]
-settings.providers = ["OpenSubtitles"]
-settings.file_system_provider_path = Path("G:\\Subtitulos")
+settings.providers = ["OpenSubtitles", "Subscene", "PodnapisiNET", "SubDivX", "Addic7ed", "FileSystem"]
+# settings.providers = ["OpenSubtitles"]
+settings.file_system_provider_path = Path("G:/Subtitulos")
 settings.search_cache_ttl = timedelta(days=7)
 settings.translation_cache_ttl = timedelta(days=30)
 settings.translators = ["Google", "Libre", "Bing"]
-settings.translators = ["Google"]
+# settings.translators = ["Google"]
 # settings.translators = []
 settings.cache_whole_requests = True
 
 
-init_logging(settings.addon_path.joinpath('logging_config_test.jsonc'))
+init_logging_from_yaml(settings.addon_path.joinpath('logging.test.yaml'))
 logger = logging.getLogger('UniversalSubs')
 logger.info("Settings: %s", to_yaml(settings))
 
@@ -59,13 +56,13 @@ logger.info("Settings: %s", to_yaml(settings))
 # provider = PodnapisiSourceProvider(settings)
 # provider = Addic7edSourceProvider(settings)
 # provider = SubDivXSourceProvider(settings)
-provider = OpenSubtitlesSourceProvider(settings)
-# provider = ProvidersRegistry.build_from_settings(settings)
+# provider = OpenSubtitlesSourceProvider(settings)
+provider = ProvidersRegistry.build_from_settings(settings)
 
 search_request = SearchRequest()
 search_request.max_results = 100
 search_request.languages = [
-    Language.english,
+    # Language.english,
     Language.spanish,
 ]
 # search_request.manual_search_text = "Aquaman"

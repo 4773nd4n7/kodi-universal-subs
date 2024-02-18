@@ -6,7 +6,7 @@ from typing import Dict
 
 from resources.lib.formats.subtitleformat import Subtitle, SubtitleLine
 from resources.lib.formats.textsubtitleformat import TextSubtitleFormat
-from resources.lib.json import from_json, to_json
+from resources.lib.utils.json import from_json, to_json
 
 
 class GooglePlaySubtitleLine(SubtitleLine):
