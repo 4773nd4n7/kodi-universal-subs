@@ -15,6 +15,8 @@ from resources.lib.providers.podnapisisourceprovider import \
     PodnapisiSourceProvider
 from resources.lib.providers.provider import Provider
 from resources.lib.providers.subdivxsourceprovider import SubDivXSourceProvider
+from resources.lib.providers.subscenesourceprovider import \
+    SubsceneSourceProvider
 from resources.lib.providers.translationsdecoratorprovider import \
     TranslationsDecoratorProvider
 from resources.lib.translation.translatorsregistry import TranslatorsRegistry
@@ -28,6 +30,7 @@ class ProvidersRegistry:
             provider.name: provider
             for provider in [
                 PodnapisiSourceProvider(settings),
+                SubsceneSourceProvider(settings),
                 SubDivXSourceProvider(settings),
                 OpenSubtitlesSourceProvider(settings),
                 FileSystemSourceProvider(settings),

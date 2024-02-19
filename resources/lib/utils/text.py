@@ -2,6 +2,7 @@
 
 import re
 from html import unescape
+from typing import List
 
 from unidecode import unidecode
 
@@ -41,3 +42,29 @@ def strip_text_from(what: str, where: str, beginning_only=False) -> str:
                       for s in re.split(r"[\s\.]+", what.strip())]) + r"[\s\.]*", re.IGNORECASE)
     stripped = re.sub(what, " ", where).strip()
     return stripped
+
+
+def strip_common_text(texts: List[str], strip_from_start: bool = True, strip_from_end: bool = True) -> List[str]:
+    if not texts or len(texts) < 2 or (not strip_from_start and not strip_from_end):
+        return texts
+    if strip_from_start:
+        for char in texts[0]:
+            all_equals = True
+            for text in texts[1:]:
+                if not len(text) or text[0] != char:
+                    all_equals = False
+                    break
+            if not all_equals:
+                break
+            texts = [text[1:] for text in texts]
+    if strip_from_end:
+        for char in texts[0][::-1]:
+            all_equals = True
+            for text in texts[1:]:
+                if not len(text) or text[len(text) - 1] != char:
+                    all_equals = False
+                    break
+            if not all_equals:
+                break
+            texts = [text[:-1] for text in texts]
+    return texts

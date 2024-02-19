@@ -24,6 +24,7 @@ from ..providers.podnapisisourceprovider import PodnapisiSourceProvider
 from ..providers.providersregistry import ProvidersRegistry
 from ..providers.searchrequest import SearchRequest
 from ..providers.subdivxsourceprovider import SubDivXSourceProvider
+from ..providers.subscenesourceprovider import SubsceneSourceProvider
 from ..utils.compression import Compression
 from ..utils.logging import init_logging_from_yaml
 from ..utils.yaml import to_yaml
@@ -52,12 +53,13 @@ logger = logging.getLogger('UniversalSubs')
 logger.info("Settings: %s", to_yaml(settings))
 
 
-# provider = FileSystemSourceProvider(settings)
-# provider = PodnapisiSourceProvider(settings)
 # provider = Addic7edSourceProvider(settings)
-# provider = SubDivXSourceProvider(settings)
+# provider = FileSystemSourceProvider(settings)
 # provider = OpenSubtitlesSourceProvider(settings)
-provider = ProvidersRegistry.build_from_settings(settings)
+# provider = PodnapisiSourceProvider(settings)
+# provider = SubDivXSourceProvider(settings)
+provider = SubsceneSourceProvider(settings)
+# provider = ProvidersRegistry.build_from_settings(settings)
 
 search_request = SearchRequest()
 search_request.max_results = 100
