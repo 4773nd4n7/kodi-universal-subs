@@ -32,7 +32,26 @@ RE_COMPRESSED_FILE_NAME = re.compile(r"\.(zip|rar|7z)$", re.IGNORECASE)
 RE_FORCED_SUBTITLE_FILE_NAME = re.compile(r"\b(forced)\b", re.IGNORECASE)
 RE_HEARING_IMPAIRED_SUBTITLE_FILE_NAME = re.compile(r"\b(sdh|hi)\b", re.IGNORECASE)
 
-FEATURE_CORRECTIONS = [("5 1", "5.1"), ("7 1", "7.1"), ("DTS HD", "DTS-HD")]
+FEATURE_CORRECTIONS = [
+    ("5 1", "5.1"),
+    ("5 1ch", "5.1"),
+    ("7 1", "7.1"),
+    ("7 1ch", "7.1"),
+    ("dts hd", "DTS-HD"),
+    ("23976", "23.976"),
+    ("dvdrip", "DVDRip"),
+    ("bdrip", "BDRip"),
+    ("brrip", "BDRip"),
+    ("blu ray", "BluRay"),
+    ("bluray", "BluRay"),
+    ("directors cut", "DC"),
+    ("director's cut", "DC"),
+    ("xvid", "XviD"),
+    ("divx", "DivX"),
+    ("ac3", "AC3"),
+    ("sdh", "SDH"),
+    ("hi", "HI"),
+]
 
 
 class SourceProvider(Provider):
@@ -130,7 +149,9 @@ class SourceProvider(Provider):
             for result in results:
                 result.rating = (result.downloads / max_downloads) * 5 if max_downloads else 0.0
         results = sorted(results, key=lambda search_result: self._compute_result_score(search_result), reverse=True)
-        self._logger.info("Found %s search result(s):\n%s", len(results), to_yaml(results))
+        # self._logger.info("Found %s search result(s):\n%s", len(results), to_yaml(results))
+        self._logger.info("Found %s search result(s):\n%s", len(results),
+                          "\n - ".join([r.title + " | " + r.release_info for r in results]))
         return results
 
     def __update_release_info(self, result: SearchResult) -> None:
@@ -138,14 +159,15 @@ class SourceProvider(Provider):
             result.release_info = re.sub(r"[\s\.\[\]_-]+", " ", result.release_info).strip()
             for feature, corrected_feature in FEATURE_CORRECTIONS:
                 result.release_info = re.sub(r"(^|\s)" + re.escape(feature) + r"(\s|$)",
-                                             r"\g<1>" + corrected_feature + r"\g<2>", result.release_info)
+                                             r"\g<1>" + corrected_feature + r"\g<2>", result.release_info, flags=re.IGNORECASE)
             result.release_info = strip_text_from(result.title, result.release_info)
+            result.release_info = strip_text_from(re.sub(r"\s*\(\d\d\d\d\)\s*$", "", result.title), result.release_info)
         if self._settings.include_author_on_results and result.author:
             result.release_info = "%s | by %s" % (result.release_info, result.author) \
-                if result.release_info else "| by %s" % (result.author)
+                if result.release_info else "by %s" % (result.author)
         if self._settings.include_downloads_on_results:
             result.release_info = "%s | %s dls" % (result.release_info, result.downloads) \
-                if result.release_info else "| %s dls" % (result.downloads)
+                if result.release_info else "%s dls" % (result.downloads)
 
     def _is_compressed_file_name(self, file_name: str) -> bool:
         """Test if file name is valid for compressed file."""

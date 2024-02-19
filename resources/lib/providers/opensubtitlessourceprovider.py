@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Dict, List, Tuple, Union
 from urllib.parse import quote
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from resources.lib.common.language import Language
 from resources.lib.common.mappedlanguages import MappedLanguages
@@ -246,15 +246,25 @@ class OpenSubtitlesSourceProvider(SourceProvider):
                 continue  # skip multi cd results
             result = SearchResult()
             result.title = normalize_white_space(result_tr_tag.select_one("a.bnone").get_text(strip=True))
-            result.release_info = result_tr_tag.select_one(
-                'td:nth-child(1)').get_text(strip=True, separator="%----%").split("%----%")[1].split("\n")[-1:][0]
+            next_is_release_info = False
+            for content in result_tr_tag.select_one('td:nth-child(1)').contents:
+                if next_is_release_info:
+                    if isinstance(content, Tag):
+                        result.release_info = content.attrs["title"] if content.name == "span" else None
+                    else:
+                        result.release_info = str(content)
+                    break
+                if isinstance(content, Tag) and content.name == "br":
+                    next_is_release_info = True
             result.is_hearing_impaired = result_tr_tag.select_one('img[src$="/icons/hearing_impaired.gif"]') is not None
             download_anchor = result_tr_tag.select_one('a[href^="/en/subtitleserve/"]')
             result.id = download_anchor.attrs["href"]
             result.downloads = int(re.sub(r"[^\d]", "", download_anchor.get_text(strip=True)))
             result.author = result_tr_tag.select_one('a[href^="/en/profile/iduser-"]').get_text(strip=True)
-            result.language = self._supported_languages.get_internal_by_name(
-                result_tr_tag.select_one("div.flag").parent.attrs["title"])
+            result.language = self._supported_languages.get_internal_by_code(
+                result_tr_tag.select_one("div.flag").parent.attrs["href"].split("-")[-1:][0])
+            if result.language == Language.unknown:
+                continue
             result.rating = float(result_tr_tag.select_one('span[title$=" votes"]').get_text(strip=True))
             results.append(result)
         return results

@@ -39,7 +39,7 @@ def normalize_white_space(text: str) -> str:
 
 def strip_text_from(what: str, where: str, beginning_only=False) -> str:
     what = re.compile((r"^[\s\.]*" if beginning_only else r"[\s\.]*") + r"[\s\.]+".join([re.escape(s)
-                      for s in re.split(r"[\s\.]+", what.strip())]) + r"[\s\.]*", re.IGNORECASE)
+                      for s in re.split(r"[\s\.\(\)\[\]]+", what.strip())]) + r"[\s\.]*", re.IGNORECASE)
     stripped = re.sub(what, " ", where).strip()
     return stripped
 

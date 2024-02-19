@@ -283,7 +283,7 @@ class SubsceneSourceProvider(SourceProvider):
             text = text.replace(str(year), "")
         if season_number is not None:
             text = re.sub("S0+" + str(season_number), "", text)
-        text = re.sub("(480p|720p|1080p|1440p|2160p|2k|4k|x\.265|x\.264|h\.265|h\.264|2.0|5.1|7.1)",
+        text = re.sub(r"(480p|720p|1080p|1440p|2160p|2k|4k|x\.265|x\.264|h\.265|h\.264|2.0|5.1|7.1)",
                       "", text, flags=re.IGNORECASE)
         separators = r"[\s\[\]\(\)\._~-]"
         episode_range_re = r"(^|" + separators + r")E?(?P<rstart>\d+)\s*[-~_]\s*E?(?P<rend>\d+)(" + separators + r"|$)"
@@ -308,6 +308,8 @@ class SubsceneSourceProvider(SourceProvider):
                 continue  # skip ad rows
             result = SearchResult()
             download_anchor = result_tr_tag.select_one('td:nth-child(1) > a')
+            if not download_anchor:
+                continue
             result.id = download_anchor.attrs["href"]
             result.title = title
             result.language = self._supported_languages.get_internal_by_name(

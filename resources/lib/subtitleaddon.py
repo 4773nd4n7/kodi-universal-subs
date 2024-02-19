@@ -114,7 +114,7 @@ class SubtitleAddon:
         provider = ProvidersRegistry.build_from_settings(self._settings)
         results = provider.search(request)
         for result in results:
-            list_item_text = result.title + " " + result.release_info if result.release_info else result.title
+            list_item_text = result.title + " | " + result.release_info if result.release_info else result.title
             list_item = xbmcgui.ListItem(label=result.language.name, label2=list_item_text)
             list_item.setArt({"icon": str(int(result.rating)), "thumb": result.language.two_letter_code})
             list_item.setProperty("sync", "true" if result.is_sync else "false")

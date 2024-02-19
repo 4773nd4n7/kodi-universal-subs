@@ -44,7 +44,7 @@ settings.search_cache_ttl = timedelta(days=7)
 settings.translation_cache_ttl = timedelta(days=30)
 settings.translators = ["Google", "Libre", "Bing"]
 # settings.translators = ["Google"]
-# settings.translators = []
+settings.translators = []
 settings.cache_whole_requests = True
 
 
@@ -58,8 +58,8 @@ logger.info("Settings: %s", to_yaml(settings))
 # provider = OpenSubtitlesSourceProvider(settings)
 # provider = PodnapisiSourceProvider(settings)
 # provider = SubDivXSourceProvider(settings)
-provider = SubsceneSourceProvider(settings)
-# provider = ProvidersRegistry.build_from_settings(settings)
+# provider = SubsceneSourceProvider(settings)
+provider = ProvidersRegistry.build_from_settings(settings)
 
 search_request = SearchRequest()
 search_request.max_results = 100
@@ -68,16 +68,16 @@ search_request.languages = [
     Language.spanish,
 ]
 # search_request.manual_search_text = "Aquaman"
-# search_request.title = "Weathering with You"
-# search_request.year = 2019
+search_request.title = "My Sassy Girl"
+search_request.year = 2001
 # search_request.show_title = "Breaking Bad"
 # search_request.show_season_number = 1
 # search_request.show_episode_number = 2
 # search_request.year = 2008
-search_request.show_title = "Pluto"
-search_request.show_season_number = 1
-search_request.show_episode_number = 3
-search_request.year = 2023
+# search_request.show_title = "Pluto"
+# search_request.show_season_number = 1
+# search_request.show_episode_number = 3
+# search_request.year = 2023
 search_request.set_file_url_or_path("C:/Example/TestFile.mkv")
 search_request.file_languages = [Language.unknown]
 search_results = provider.search(search_request)
