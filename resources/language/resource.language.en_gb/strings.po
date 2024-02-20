@@ -26,14 +26,18 @@ msgid "Suggest automatic translations from:"
 msgstr ""
 
 msgctxt "#30003"
-msgid "Include author in search results"
+msgid "Clean up subtitles"
 msgstr ""
 
 msgctxt "#30004"
-msgid "Include downloads in search results"
+msgid "Include author in search results"
 msgstr ""
 
 msgctxt "#30005"
+msgid "Include downloads in search results"
+msgstr ""
+
+msgctxt "#30006"
 msgid "Maximum search results"
 msgstr ""
 
@@ -67,4 +71,24 @@ msgstr ""
 
 msgctxt "#40005"
 msgid "Cache whole requests (for debugging only, increases cache storage size)"
+msgstr ""
+
+msgctxt "#60000"
+msgid "Subtitles Cleanup"
+msgstr ""
+
+msgctxt "#60001"
+msgid "Remove advertisements"
+msgstr ""
+
+msgctxt "#60002"
+msgid "Remove hearing impaired markers"
+msgstr ""
+
+msgctxt "#60003"
+msgid "Update rules URL"
+msgstr ""
+
+msgctxt "#60004"
+msgid "Update rules interval in days"
 msgstr ""

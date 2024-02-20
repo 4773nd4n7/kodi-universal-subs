@@ -29,7 +29,7 @@ Compression.seven_zip_exec_path = Path("C:/Program Files/7-Zip/7z.exe")
 
 settings = Settings()
 settings.addon_id = "service.subtitles.universalsubs"
-settings.addon_path = Path(os.environ["UNIVERSAL_SUBS_PATH"]).resolve()
+settings.addon_path = Path(__file__).joinpath("..", "..", "..", "..").resolve()
 settings.addon_user_path = Path(os.environ["UNIVERSAL_SUBS_USER_PATH"]).resolve()
 settings.include_author_on_results = True
 settings.include_downloads_on_results = True

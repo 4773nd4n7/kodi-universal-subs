@@ -31,14 +31,13 @@ from ..utils.yaml import to_yaml
 
 Compression.seven_zip_exec_path = Path("C:/Program Files/7-Zip/7z.exe")
 
-
 settings = Settings()
 settings.addon_id = "service.subtitles.universalsubs"
-settings.addon_path = Path(os.environ["UNIVERSAL_SUBS_PATH"]).resolve()
+settings.addon_path = Path(__file__).joinpath("..", "..", "..", "..").resolve()
 settings.addon_user_path = Path(os.environ["UNIVERSAL_SUBS_USER_PATH"]).resolve()
 settings.include_author_on_results = False
 settings.providers = ["OpenSubtitles", "Subscene", "PodnapisiNET", "SubDivX", "Addic7ed", "FileSystem"]
-# settings.providers = ["OpenSubtitles"]
+settings.providers = ["OpenSubtitles"]
 settings.file_system_provider_path = Path("G:/Subtitulos")
 settings.search_cache_ttl = timedelta(days=7)
 settings.translation_cache_ttl = timedelta(days=30)
@@ -84,8 +83,10 @@ search_results = provider.search(search_request)
 
 
 if len(search_results) > 0:  # and not settings.translators:
+    search_result = search_results[len(search_results) - 1]
     get_request = GetRequest()
-    get_request.search_result_id = search_results[len(search_results) - 1].id
+    get_request.language = search_result.language
+    get_request.search_result_id = search_result.id
     get_request.file_url = search_request.file_url
     get_results = provider.get(get_request)
     for get_result in get_results:

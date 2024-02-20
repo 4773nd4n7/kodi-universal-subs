@@ -50,6 +50,13 @@ class SubtitleAddon:
             self._settings.providers.remove("FileSystem")
         self._settings.translators = kodi_addon_settings.getStringList("translators")
 
+        self._settings.clean_up_subtitles = kodi_addon_settings.getBool("clean_up_subtitles")
+        self._settings.clean_up_ads = kodi_addon_settings.getBool("clean_up_ads")
+        self._settings.clean_up_hi_markers = kodi_addon_settings.getBool("clean_up_hi_markers")
+        self._settings.clean_up_rules_update_url = kodi_addon_settings.getString("clean_up_rules_update_url")
+        self._settings.clean_up_rules_update_interval = timedelta(
+            days=kodi_addon_settings.getInt("clean_up_rules_update_interval"))
+
         seven_zip_exec_path = kodi_addon_settings.getString("seven_zip_executable")
         if seven_zip_exec_path:
             Compression.seven_zip_exec_path = seven_zip_exec_path
@@ -123,6 +130,7 @@ class SubtitleAddon:
                 handle=kodi_dir_handle,
                 url="plugin://%s/?" % self._settings.addon_id + urlencode({
                     "search_result_id": result.id,
+                    "language": result.language.name,
                     "file_url": request.file_url.encode("utf-8")
                 }),
                 listitem=list_item,
@@ -133,6 +141,7 @@ class SubtitleAddon:
         self.__setup_user_data_directory()
         request = GetRequest()
         request.search_result_id = parsed_args["search_result_id"]
+        request.language = Language(parsed_args["language"])
         request.file_url = parsed_args["file_url"]
         provider = ProvidersRegistry.build_from_settings(self._settings)
         results = provider.get(request)

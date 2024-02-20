@@ -26,14 +26,18 @@ msgid "Suggest automatic translations from:"
 msgstr "Sugerir traducciones automáticas de:"
 
 msgctxt "#30003"
+msgid "Clean up subtitles"
+msgstr "Limpiar subtítulos"
+
+msgctxt "#30004"
 msgid "Include author in search results"
 msgstr "Incluir autor en resultados de búsqueda"
 
-msgctxt "#30004"
+msgctxt "#30005"
 msgid "Include downloads in search results"
 msgstr "Incluir descargas en resultados de búsqueda"
 
-msgctxt "#30005"
+msgctxt "#30006"
 msgid "Maximum search results"
 msgstr "Máxima cantidad de resultados de búsqueda"
 
@@ -51,11 +55,11 @@ msgstr "Avanzado"
 
 msgctxt "430001"
 msgid "Subtitle search cache TTL in minutes (0 turns it off)"
-msgstr "TTL para cache de búsqueda de subtítulos (0 para desactivar)"
+msgstr "TTL en minútos para cache de búsqueda de subtítulos (0 para desactivar)"
 
 msgctxt "#40002"
 msgid "Translations cache TTL in days (0 turns it off)"
-msgstr "TTL para cache de traducciones (0 para desactivar)"
+msgstr "TTL en días para cache de traducciones (0 para desactivar)"
 
 msgctxt "#40003"
 msgid "Path to 7z executable (7-Zip decompression support)"
@@ -68,3 +72,23 @@ msgstr "Excluir subtítulos divididos de los resultados"
 msgctxt "#40005"
 msgid "Cache whole requests (for debugging only, increases required cache storage size)"
 msgstr "Chear request completos (sólo para debugging, incrementa el tamaño de cache en disco)"
+
+msgctxt "#60000"
+msgid "Subtitles Cleanup"
+msgstr "Limpieza de Subtítulos"
+
+msgctxt "#60001"
+msgid "Remove advertisements"
+msgstr "Remover publicidades"
+
+msgctxt "#60002"
+msgid "Remove hearing impaired markers"
+msgstr "Remover guías para personas con discapacidad auditiva"
+
+msgctxt "#60003"
+msgid "Update rules URL"
+msgstr "URL de actualización de reglas"
+
+msgctxt "#60004"
+msgid "Update rules interval in days"
+msgstr "Intervalo en días para actualización de reglas"

@@ -6,6 +6,8 @@ from typing import Dict, List
 from resources.lib.common.settings import Settings
 from resources.lib.providers.addic7edsourceprovider import \
     Addic7edSourceProvider
+from resources.lib.providers.cleanupdecoratorprovider import \
+    CleanupDecoratorProvider
 from resources.lib.providers.compositeprovider import CompositeProvider
 from resources.lib.providers.filesystemsourceprovider import \
     FileSystemSourceProvider
@@ -38,16 +40,36 @@ class ProvidersRegistry:
             ]
         }
 
+    def get_provider(self, name: str) -> Provider:
+        return self._providers[name]
+
     def get_providers(self, names: List[str]) -> List[Provider]:
         return [self._providers[name] for name in names]
 
     @staticmethod
-    def build_from_settings(settings: Settings) -> Provider:
+    def __build_from_source_providers(settings: Settings) -> Provider:
         providersRegistry = ProvidersRegistry(settings)
-        provider = CompositeProvider(providersRegistry.get_providers(settings.providers))
-        if settings.translators:
-            translators_registry = TranslatorsRegistry(settings)
-            translators = translators_registry.get_translators(settings.translators)
-            return TranslationsDecoratorProvider(provider, translators, settings.translation_extra_languages)
-        else:
+        if len(settings.providers) == 1:
+            return providersRegistry.get_provider(settings.providers[0])
+        return CompositeProvider(providersRegistry.get_providers(settings.providers))
+
+    @staticmethod
+    def __build_from_translators(provider: Provider, settings: Settings) -> Provider:
+        if not settings.translators:
             return provider
+        translators_registry = TranslatorsRegistry(settings)
+        translators = translators_registry.get_translators(settings.translators)
+        return TranslationsDecoratorProvider(provider, translators, settings.translation_extra_languages)
+
+    @staticmethod
+    def __build_from_cleanup(provider: Provider, settings: Settings) -> Provider:
+        if not settings.clean_up_subtitles:  # not settings.clean_up_ads and not settings.clean_up_hi_markers:
+            return provider
+        return CleanupDecoratorProvider(provider, settings)
+
+    @staticmethod
+    def build_from_settings(settings: Settings) -> Provider:
+        provider = ProvidersRegistry.__build_from_source_providers(settings)
+        provider = ProvidersRegistry.__build_from_translators(provider, settings)
+        provider = ProvidersRegistry.__build_from_cleanup(provider, settings)
+        return provider

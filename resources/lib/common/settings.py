@@ -29,3 +29,9 @@ class Settings:
     translation_cache_ttl: timedelta = timedelta(days=30)
     cache_whole_requests: bool = False
     exclude_splitted_subtitles = True
+
+    clean_up_subtitles = True
+    clean_up_ads = True
+    clean_up_hi_markers = False
+    clean_up_rules_update_url: str = "https://raw.githubusercontent.com/bkiziuk/service.subsmangler/master/resources/regexdef.def"
+    clean_up_rules_update_interval: timedelta = None

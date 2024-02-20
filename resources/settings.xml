@@ -7,7 +7,7 @@
             <group id="1">
                 <setting id="providers" type="list[string]" label="30001" help="30001">
                     <level>0</level>
-                    <default>OpenSubtitles|Addic7ed|SubDivX|PodnapisiNET|FileSystem</default>
+                    <default>OpenSubtitles|Subscene|Addic7ed|SubDivX|PodnapisiNET|FileSystem</default>
                     <constraints>
                         <options>
                             <option label="OpenSubtitles.org | OS">OpenSubtitles</option>
@@ -38,26 +38,68 @@
                         <multiselect>true</multiselect>
                     </control>
                 </setting>
-                <setting id="include_author_on_results" type="boolean" label="30003" help="30003">
+                <setting id="clean_up_subtitles" type="boolean" label="30003" help="30003">
                     <level>1</level>
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting id="include_downloads_on_results" type="boolean" label="30004" help="30004">
+                <setting id="include_author_on_results" type="boolean" label="30004" help="30004">
                     <level>1</level>
                     <default>true</default>
                     <control type="toggle"/>
                 </setting>
-                <setting id="max_search_results" type="integer" label="30005" help="30005">
+                <setting id="include_downloads_on_results" type="boolean" label="30005" help="30005">
+                    <level>1</level>
+                    <default>true</default>
+                    <control type="toggle"/>
+                </setting>
+                <setting id="max_search_results" type="integer" label="30006" help="30006">
                     <level>1</level>
                     <default>50</default>
                     <control type="edit" format="integer">
-                        <heading>30005</heading>
+                        <heading>30006</heading>
                     </control>
                 </setting>
             </group>
         </category>
 
+        <!-- Subtitles Cleanup -->
+        <category id="subtitles_cleanup" label="60000" help="60000">
+            <group id="1">
+                <setting id="clean_up_ads" type="boolean" label="60001" help="60001">
+                    <level>1</level>
+                    <default>true</default>
+                    <control type="toggle"/>
+                </setting>
+                <setting id="clean_up_hi_markers" type="boolean" label="60002" help="60002">
+                    <level>1</level>
+                    <default>false</default>
+                    <control type="toggle"/>
+                </setting>
+                <setting id="clean_up_rules_update_url" type="string" label="60003" help="60003">
+                    <level>2</level>
+                    <default>https://raw.githubusercontent.com/bkiziuk/service.subsmangler/master/resources/regexdef.def</default>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="edit" format="string">
+                        <heading>60003</heading>
+                    </control>
+                </setting>
+                <setting id="clean_up_rules_update_interval" type="integer" label="60004" help="60004">
+                    <level>2</level>
+                    <default>7</default>
+                    <constraints>
+                        <minimum>0</minimum>
+                        <step>1</step>
+                        <maximum>120</maximum>
+                    </constraints>
+                    <control type="slider" format="integer">
+                        <popup>false</popup>
+                    </control>
+                </setting>
+            </group>
+        </category>
 
         <!-- File System Settings -->
         <category id="file_system" label="50000" help="50000">
