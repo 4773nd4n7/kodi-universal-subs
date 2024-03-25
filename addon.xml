@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!-- See https://kodi.wiki/view/Addon.xml -->
-<addon id="service.subtitles.universalsubs" name="Universal Subs" version="1.0.0" provider-name="4773nd4n7">
+<addon id="service.subtitles.universalsubs" name="Universal Subs" version="1.0.1" provider-name="4773nd4n7">
 	<requires>
 		<!-- See https://kodi.tv/addons/nexus/category/python-modules/ -->
 		<import addon="xbmc.python" version="3.0.0"/>
@@ -25,8 +25,8 @@
 		<forum>https://forum.kodi.tv/showthread.php?tid=xxxx</forum>
 		<email>attendant51@gmail.com</email>
 		<source>https://github.com/4773nd4n7/kodi-universal-subs</source>
-		<news>v1.0.0 (02/12/2024)
-		[new] Initial release
+		<news>v1.0.1 (03/25/2024)
+		Improved building of search request information for items not in database.
 		</news>
 		<assets>
 			<icon>icon.png</icon>

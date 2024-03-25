@@ -4,6 +4,7 @@ import logging
 import logging.config
 import os
 import os.path
+import re
 import shutil
 import tempfile
 from datetime import timedelta
@@ -25,6 +26,11 @@ from resources.lib.providers.searchrequest import SearchRequest
 from resources.lib.utils.compression import Compression
 from resources.lib.utils.logging import init_logging_from_yaml
 from resources.lib.utils.yaml import to_yaml
+
+FILENAME_SHOW_EPISODE_RE = re.compile(
+    r"\s*(?P<show_title>.+)[\s_-]+S(?P<season_number>\d+)E(?P<episode_number>\d+)[\s_-]+(?P<title>.*)\s*",
+    flags=re.IGNORECASE
+)
 
 
 class SubtitleAddon:
@@ -87,15 +93,10 @@ class SubtitleAddon:
                 parsed_args[k] = v[0]
         return parsed_args
 
-    def __handle_search(self, kodi_dir_handle: int, parsed_args: Dict[str, str]) -> None:
+    def __parse_search_request(self, parsed_args: Dict[str, str]) -> None:
         request = SearchRequest()
         request.max_results = xbmcaddon.Addon().getSettings().getInt("max_search_results")
         request.languages = [Language(ln) for ln in unquote(parsed_args["languages"]).split(",")]
-        request.manual_search_text = unquote(parsed_args.get("searchstring")) \
-            if parsed_args.get("searchstring", None) else None
-        request.title = xbmc.getInfoLabel("VideoPlayer.Title") or xbmc.getInfoLabel("VideoPlayer.OriginalTitle")
-        request.show_title = xbmc.getInfoLabel("VideoPlayer.TVshowtitle")
-        request.year = int(xbmc.getInfoLabel("VideoPlayer.Year").strip("()"))
         request.file_languages = [
             Language.from_three_letter_code(language_three_letter_code)
             for language_three_letter_code in set([
@@ -105,19 +106,42 @@ class SubtitleAddon:
             if language_three_letter_code
         ]
         request.set_file_url_or_path(unquote(xbmc.Player().getPlayingFile()))
-        if request.show_title:
-            show_episode = xbmc.getInfoLabel("VideoPlayer.Episode")
-            if "s" in show_episode.lower():
-                request.show_season_number = 0
-                request.show_episode_number = int(show_episode[-1:])
-            else:
-                request.show_season_number = int(xbmc.getInfoLabel("VideoPlayer.Season"))
-                request.show_episode_number = int(show_episode)
         if request.file_parsed_url.scheme == "rar":
             request.set_file_url_or_path(os.path.dirname(request.file_url[6:]))
         elif request.file_parsed_url.scheme == "stack":
             stack_path = request.file_url.split(" , ")[0]
             request.set_file_url_or_path(stack_path[8:])
+        request.manual_search_text = unquote(parsed_args.get("searchstring")) \
+            if parsed_args.get("searchstring", None) \
+            else None
+        request.year = int(xbmc.getInfoLabel("VideoPlayer.Year").strip("()")) \
+            if xbmc.getInfoLabel("VideoPlayer.Year") \
+            else None
+        if xbmc.getInfoLabel("VideoPlayer.DBID"):
+            request.title = xbmc.getInfoLabel("VideoPlayer.Title") or xbmc.getInfoLabel("VideoPlayer.OriginalTitle")
+            request.show_title = xbmc.getInfoLabel("VideoPlayer.TVshowtitle")
+            if request.show_title:
+                show_episode = xbmc.getInfoLabel("VideoPlayer.Episode")
+                if "s" in show_episode.lower():
+                    request.show_season_number = 0
+                    request.show_episode_number = int(show_episode[-1:])
+                else:
+                    request.show_season_number = int(xbmc.getInfoLabel("VideoPlayer.Season"))
+                    request.show_episode_number = int(show_episode)
+        else:
+            filename = os.path.splitext(xbmc.getInfoLabel("VideoPlayer.Title"))[0]
+            show_episode_match = FILENAME_SHOW_EPISODE_RE.match(filename)
+            if show_episode_match:
+                request.show_title = show_episode_match["show_title"].replace("_", " ").strip()
+                request.show_season_number = int(show_episode_match["season_number"])
+                request.show_episode_number = int(show_episode_match["episode_number"])
+                request.title = show_episode_match["title"].replace("_", " ").strip()
+            else:
+                request.title = filename
+        return request
+
+    def __handle_search(self, kodi_dir_handle: int, parsed_args: Dict[str, str]) -> None:
+        request = self.__parse_search_request(parsed_args)
         provider = ProvidersRegistry.build_from_settings(self._settings)
         results = provider.search(request)
         for result in results:
