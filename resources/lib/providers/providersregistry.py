@@ -11,6 +11,7 @@ from resources.lib.providers.cleanupdecoratorprovider import \
 from resources.lib.providers.compositeprovider import CompositeProvider
 from resources.lib.providers.filesystemsourceprovider import \
     FileSystemSourceProvider
+from resources.lib.providers.localsourceprovider import LocalSourceProvider
 from resources.lib.providers.opensubtitlessourceprovider import \
     OpenSubtitlesSourceProvider
 from resources.lib.providers.podnapisisourceprovider import \
@@ -35,8 +36,9 @@ class ProvidersRegistry:
                 SubsceneSourceProvider(settings),
                 SubDivXSourceProvider(settings),
                 OpenSubtitlesSourceProvider(settings),
+                Addic7edSourceProvider(settings),
+                LocalSourceProvider(settings),
                 FileSystemSourceProvider(settings),
-                Addic7edSourceProvider(settings)
             ]
         }
 

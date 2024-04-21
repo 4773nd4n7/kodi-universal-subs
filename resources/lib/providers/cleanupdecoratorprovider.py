@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import copy
+import functools
+import math
 import os
 import re
 import shutil
@@ -17,6 +19,71 @@ from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
 from resources.lib.providers.provider import Provider
 from resources.lib.utils.httpclient import HttpClient, HttpRequest
+
+TAG_MARKERS: List[str] = ["<font ", "<font>", "</font"]
+PAUSE_MARKERS: List[str] = [',', ';', ':', '.', '?', '!']
+
+
+class TextLineBreak:
+    def __init__(self, priority: int, index: int, effective_index: int) -> None:
+        self.priority: int = priority
+        self.index: int = index  # relative to line
+        self.effective_index: int = effective_index  # relative to line
+
+    def distance_to(self, target_effective_index: int) -> int:
+        return abs(target_effective_index - self.effective_index)
+
+
+class TextLineInfo:
+
+    def __init__(self, offset_index: int, starts_inside_tag: bool, text: str) -> None:
+        self.offset_index: int = offset_index
+        self.length: int = len(text)
+        self.effective_length: int = 0
+        self.candidate_breaks: List[TextLineBreak] = []
+        self.starts_inside_tag: bool = starts_inside_tag
+        self.ends_inside_tag: bool = starts_inside_tag
+        current_index: int = 0
+        previous_char: str = None
+        for current_char in text:
+            if not self.ends_inside_tag and current_char == '<':
+                current_text_start = text[current_index:]
+                if any(current_text_start.startswith(tag_marker) for tag_marker in TAG_MARKERS):
+                    self.ends_inside_tag = True
+            elif self.ends_inside_tag:
+                if current_char == '>':
+                    self.ends_inside_tag = False
+            else:
+                if current_index > 0 and current_index < len(text) - 1:
+                    if previous_char == ' ' and (current_char == '[' or current_char == '-'):
+                        self.candidate_breaks.append(TextLineBreak(0, current_index, self.effective_length))
+                    elif current_char == ' ':
+                        priority = 0 if previous_char == ']' else 1 if previous_char in PAUSE_MARKERS else 2
+                        self.candidate_breaks.append(TextLineBreak(priority, current_index, self.effective_length))
+                self.effective_length += 1
+            current_index += 1
+            previous_char = current_char
+
+
+class TextInfo:
+
+    def __init__(self, text: str) -> None:
+        self.lines_info: List[TextLineInfo] = []
+        current_offset = 0
+        inside_tag = False
+        for line_text in text.splitlines():
+            line_info = TextLineInfo(current_offset, inside_tag, line_text)
+            current_offset += line_info.length + 1
+            inside_tag = line_info.ends_inside_tag
+            self.lines_info.append(line_info)
+
+    @property
+    def total_length(self) -> int:
+        return functools.reduce(lambda tl, li: tl + li.length, self.lines_info, 0)
+
+    @property
+    def total_effective_length(self) -> int:
+        return functools.reduce(lambda tl, li: tl + li.effective_length, self.lines_info, 0)
 
 
 class CleanupDecoratorProvider(DecoratorProvider):
@@ -80,6 +147,57 @@ class CleanupDecoratorProvider(DecoratorProvider):
                 self._logger.debug("Error processing cleanup rule %s: '", clean_up_rule, str(e))
         return text
 
+    @staticmethod
+    def apply_custom_rules(text: str) -> str:
+        # fix opening <font> tags
+        text = re.sub(
+            r"""(<\s*|[ \t]*)(/\s*|[ \t]*)font(\s*)color(\s*)=(\s*)["'](?P<color>[^"']+)["'](\s*)>""",
+            lambda m: f'<font color="{m['color']}">',
+            text,
+            flags=re.IGNORECASE)
+        # fix closing <font> tags
+        text = re.sub(r'(<\s*|[ \t]*)(/\s*|[ \t]*)font(\s*)>', '</font>', text, flags=re.IGNORECASE)
+        # simplify <font> tags leaving at most 2 characters out or only white space
+        while True:
+            updated_text = re.sub(
+                r'<font color="(?P<color1>[^"]+)">(?P<text1>[^<]*)</font>(?P<text2>\s*[^<]{0,2}\s*)<font color="(?P<color2>[^"]+)">',
+                lambda m: f'<font color="{m['color1']}">{m['text1']}{m['text2']}'
+                if m['color1'] == m['color2'] else m[0],
+                text)
+            if updated_text == text:
+                break
+            text = updated_text
+        # add missing space after dialog starting dash
+        text = re.sub(r'^[-—](?P<text>[^\s])', lambda m: f'- {m['text']}', text)
+        # simplify consecutive white spaces
+        text = re.sub(r' {2,}', ' ', text)
+        # strip white space at begining or lines
+        text = re.sub(r'^\s*<font color="(?P<color>[^"]+)">\s*',
+                      lambda m: f'<font color="{m['color']}">', text, flags=re.MULTILINE).lstrip()
+        # strip white space at end of lines
+        text = re.sub(r'\s*</font>\s*$', '</font>', text, flags=re.MULTILINE).rstrip()
+        return text
+
+    @staticmethod
+    def apply_line_breaks(text: str, max_line_length: int = 50) -> str:
+        text_info = TextInfo(text)
+        if len(text_info.lines_info) != 1:
+            return text
+        line_info: TextLineInfo = text_info.lines_info[0]
+        target_effective_index = math.ceil(line_info.effective_length / 2) + 1
+        for priority in range(3):
+            if priority > 0 and len(text) < max_line_length:
+                return text
+            priority_breaks = [b for b in line_info.candidate_breaks if b.priority == priority]
+            sorted_prority_breaks = sorted(priority_breaks, key=lambda b: b.distance_to(target_effective_index))
+            selected_break: TextLineBreak = next((b for b in sorted_prority_breaks), None)
+            # selected_break: TextLineBreak = next((b for b in sorted(
+            #     (b for b in line_info.candidate_breaks if b.priority == priority),
+            #     key=lambda b: -abs(target_break_effective_index - b.effective_index))), None)
+            if selected_break:
+                return text[:selected_break.index].strip() + "\n" + text[selected_break.index:].strip()
+        return text
+
     def clean_up_subtitle(self, subtitle: Subtitle, ads_rules: List[str], hi_marks_rules: List[str]) -> GetResult:
         for _line in reversed(subtitle.lines):
             line: SubtitleLine = _line
@@ -89,7 +207,8 @@ class CleanupDecoratorProvider(DecoratorProvider):
                 line_text = self.apply_clean_up_rules(line_text, ads_rules)
             if hi_marks_rules:
                 line_text = self.apply_clean_up_rules(line_text, hi_marks_rules)
-            line_text = re.sub(' {2,}', ' ', line_text).strip()
+            line_text = CleanupDecoratorProvider.apply_custom_rules(line_text)
+            line_text = CleanupDecoratorProvider.apply_line_breaks(line_text)
             if not line_text:
                 subtitle.lines.remove(line)
             else:

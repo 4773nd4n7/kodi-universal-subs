@@ -5,6 +5,7 @@ from pathlib import Path
 from re import IGNORECASE, UNICODE, compile
 from typing import List
 from urllib.parse import ParseResult, unquote, urlparse
+from urllib.request import url2pathname
 
 from resources.lib.common.language import Language
 
@@ -46,7 +47,11 @@ class SearchRequest:
 
     @property
     def file_path(self) -> Path:
-        return Path(unquote(self.file_parsed_url.path)) if self.is_file else None
+        if not self.is_file:
+            return None
+        file_parsed_url = self.file_parsed_url
+        host = "{0}{0}{mnt}{0}".format(os.path.sep, mnt=file_parsed_url.netloc)
+        return Path(os.path.normpath(os.path.join(host, url2pathname(unquote(file_parsed_url.path)))))
 
     def get_file_name(self, include_extension: bool = True) -> str:
         (file_directory, file_name) = os.path.split(unquote(self.file_parsed_url.path))

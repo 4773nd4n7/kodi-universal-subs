@@ -150,8 +150,8 @@ class SourceProvider(Provider):
                 result.rating = (result.downloads / max_downloads) * 5 if max_downloads else 0.0
         results = sorted(results, key=lambda search_result: self._compute_result_score(search_result), reverse=True)
         # self._logger.info("Found %s search result(s):\n%s", len(results), to_yaml(results))
-        self._logger.info("Found %s search result(s):\n%s", len(results),
-                          "\n - ".join([r.title + " | " + r.release_info for r in results]))
+        self._logger.info("Found %s search result(s):\n - %s", len(results),
+                          "\n - ".join(["%s | %s | %s" % (r.id, r.title, r.release_info) for r in results]))
         return results
 
     def __update_release_info(self, result: SearchResult) -> None:

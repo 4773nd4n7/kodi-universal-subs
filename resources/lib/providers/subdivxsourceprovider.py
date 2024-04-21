@@ -24,6 +24,7 @@ class SubDivXSourceProvider(SourceProvider):
     def __init__(self, settings: Settings):
         super().__init__(settings, MappedLanguages([Language.spanish]))
         self._http_client.base_url = "https://www.subdivx.com/"
+        self._http_client.default_headers["Referer"] = "https://www.subdivx.com/index.php"
 
     @property
     def name(self) -> str:

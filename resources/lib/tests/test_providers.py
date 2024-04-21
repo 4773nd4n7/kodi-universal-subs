@@ -19,6 +19,7 @@ from ..common.settings import Settings
 from ..providers.addic7edsourceprovider import Addic7edSourceProvider
 from ..providers.filesystemsourceprovider import FileSystemSourceProvider
 from ..providers.getrequest import GetRequest
+from ..providers.localsourceprovider import LocalSourceProvider
 from ..providers.opensubtitlessourceprovider import OpenSubtitlesSourceProvider
 from ..providers.podnapisisourceprovider import PodnapisiSourceProvider
 from ..providers.providersregistry import ProvidersRegistry
@@ -36,8 +37,7 @@ settings.addon_id = "service.subtitles.universalsubs"
 settings.addon_path = Path(__file__).joinpath("..", "..", "..", "..").resolve()
 settings.addon_user_path = Path(os.environ["UNIVERSAL_SUBS_USER_PATH"]).resolve()
 settings.include_author_on_results = False
-settings.providers = ["OpenSubtitles", "Subscene", "PodnapisiNET", "SubDivX", "Addic7ed", "FileSystem"]
-settings.providers = ["OpenSubtitles"]
+settings.providers = ["OpenSubtitles", "Subscene", "PodnapisiNET", "SubDivX", "Addic7ed", "Local", "FileSystem"]
 settings.file_system_provider_path = Path("G:/Subtitulos")
 settings.search_cache_ttl = timedelta(days=7)
 settings.translation_cache_ttl = timedelta(days=30)
@@ -54,6 +54,7 @@ logger.info("Settings: %s", to_yaml(settings))
 
 # provider = Addic7edSourceProvider(settings)
 # provider = FileSystemSourceProvider(settings)
+# provider = LocalSourceProvider(settings)
 # provider = OpenSubtitlesSourceProvider(settings)
 # provider = PodnapisiSourceProvider(settings)
 # provider = SubDivXSourceProvider(settings)
@@ -61,23 +62,27 @@ logger.info("Settings: %s", to_yaml(settings))
 provider = ProvidersRegistry.build_from_settings(settings)
 
 search_request = SearchRequest()
+search_request.set_file_url_or_path("C:/Example/TestFile.mkv")
 search_request.max_results = 100
 search_request.languages = [
-    # Language.english,
+    Language.english,
     Language.spanish,
+    Language.italian,
 ]
 # search_request.manual_search_text = "Aquaman"
-search_request.title = "My Sassy Girl"
-search_request.year = 2001
-# search_request.show_title = "Breaking Bad"
-# search_request.show_season_number = 1
-# search_request.show_episode_number = 2
-# search_request.year = 2008
+# search_request.title = "My Sassy Girl"
+# search_request.year = 2001
+search_request.title = "Black Sea"
+search_request.show_title = "Le indagini di Lolita Lobosco"
+search_request.show_season_number = 2
+search_request.show_episode_number = 1
+search_request.year = 2023
+search_request.set_file_url_or_path(
+    "file:///F:/Series/%28__OK__%29/Le%20indagini%20di%20Lolita%20Lobosco/Season%202/Le%20indagini%20di%20Lolita%20Lobosco%20S02E01%20Black%20Sea.mkv")
 # search_request.show_title = "Pluto"
 # search_request.show_season_number = 1
 # search_request.show_episode_number = 3
 # search_request.year = 2023
-search_request.set_file_url_or_path("C:/Example/TestFile.mkv")
 search_request.file_languages = [Language.unknown]
 search_results = provider.search(search_request)
 

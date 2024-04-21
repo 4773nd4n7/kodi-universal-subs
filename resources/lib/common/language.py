@@ -730,6 +730,7 @@ class Language:
     hmong: "Language"
     hungarian: "Language"
     inuktitut: "Language"
+    italian: "Language"
     japanese: "Language"
     kalaallisut: "Language"
     kirghiz: "Language"
@@ -833,6 +834,7 @@ Language.hindi = Language("Hindi")
 Language.hmong = Language("Hmong")
 Language.hungarian = Language("Hungarian")
 Language.inuktitut = Language("Inuktitut")
+Language.italian = Language("Italian")
 Language.japanese = Language("Japanese")
 Language.kalaallisut = Language("Kalaallisut")
 Language.kirghiz = Language("Kirghiz")

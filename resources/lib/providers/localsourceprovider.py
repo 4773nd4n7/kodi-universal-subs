@@ -15,32 +15,31 @@ from resources.lib.providers.sourceprovider import SourceProvider
 from resources.lib.utils.text import normalize_text
 
 
-class FileSystemSourceProvider(SourceProvider):
+class LocalSourceProvider(SourceProvider):
 
     def __init__(self, settings: Settings):
         super().__init__(settings, MappedLanguages([]))
-        self.root_path = settings.file_system_provider_path
 
     @property
     def name(self) -> str:
-        return "FileSystem"
+        return "Local"
 
     @property
     def short_name(self) -> str:
-        return "FS"
+        return "LO"
 
     def _fetch_search_results(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[SearchResult]:
         results: List[SearchResult] = []
-        normalized_search_term = normalize_text(self._build_search_term(request))
-        if not normalized_search_term:
+        if not request.is_file:
             return results
-        for root_name, _, file_names in os.walk(self.root_path):
+        request_base_file_path = os.path.splitext(str(request.file_path))[0]
+        for root_name, _, file_names in os.walk(request.file_path.parent):
             root_path = Path(root_name)
-            normalized_root_name = normalize_text(root_name)
             for file_name in file_names:
                 if not (self._is_subtitle_file_name(file_name) or self._is_compressed_file_name(file_name)):
                     continue
-                if not (normalized_search_term in normalize_text(file_name) or normalized_search_term in normalized_root_name):
+                file_path = root_path.joinpath(file_name)
+                if not str(file_path).startswith(request_base_file_path):
                     continue
                 result = SearchResult()
                 file_language_code = os.path.splitext(os.path.splitext(file_name)[0])[1][1:].split(" ")[0]
@@ -49,7 +48,7 @@ class FileSystemSourceProvider(SourceProvider):
                     else Language.unknown
                 if result.language != Language.unknown and request.languages and not result.language in request.languages:
                     continue
-                result.id = str(root_path.joinpath(file_name))
+                result.id = str(file_path)
                 result.title = file_name
                 result.release_info = result.id
                 results.append(result)

@@ -7,7 +7,7 @@
             <group id="1">
                 <setting id="providers" type="list[string]" label="30001" help="30001">
                     <level>0</level>
-                    <default>OpenSubtitles|Subscene|Addic7ed|SubDivX|PodnapisiNET|FileSystem</default>
+                    <default>OpenSubtitles|Subscene|Addic7ed|SubDivX|PodnapisiNET|Local|FileSystem</default>
                     <constraints>
                         <options>
                             <option label="OpenSubtitles.org | OS">OpenSubtitles</option>
@@ -15,6 +15,7 @@
                             <option label="Addic7ed.com | AD7">Addic7ed</option>
                             <option label="SubDivX | SDX">SubDivX</option>
                             <option label="Podnapisi.NET | PN">PodnapisiNET</option>
+                            <option label="Local | LO">Local</option>
                             <option label="File System | FS">FileSystem</option>
                         </options>
                     </constraints>
