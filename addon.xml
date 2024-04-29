@@ -2,7 +2,7 @@
 <!-- See https://kodi.wiki/view/Addon.xml -->
 <addon id="service.subtitles.universalsubs" name="Universal Subs" version="1.0.1" provider-name="4773nd4n7">
 	<requires>
-		<!-- See https://kodi.tv/addons/nexus/category/python-modules/ -->
+		<!-- See https://kodi.tv/addons/omega/category/python-modules/ -->
 		<import addon="xbmc.python" version="3.0.0"/>
 		<import addon="script.module.beautifulsoup4" />
 		<import addon="script.module.cachetools"/>

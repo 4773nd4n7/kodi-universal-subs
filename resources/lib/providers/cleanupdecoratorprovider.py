@@ -33,6 +33,14 @@ class TextLineBreak:
     def distance_to(self, target_effective_index: int) -> int:
         return abs(target_effective_index - self.effective_index)
 
+    def score(self, target_effective_index: int) -> int:
+        if self.priority == 0:
+            return 10 - self.distance_to(target_effective_index)
+        elif self.priority == 1:
+            return 4 - self.distance_to(target_effective_index)
+        else:
+            return 0 - self.distance_to(target_effective_index)
+
 
 class TextLineInfo:
 
@@ -61,8 +69,8 @@ class TextLineInfo:
                         priority = 0 if previous_char == ']' else 1 if previous_char in PAUSE_MARKERS else 2
                         self.candidate_breaks.append(TextLineBreak(priority, current_index, self.effective_length))
                 self.effective_length += 1
+                previous_char = current_char
             current_index += 1
-            previous_char = current_char
 
 
 class TextInfo:
@@ -152,50 +160,59 @@ class CleanupDecoratorProvider(DecoratorProvider):
         # fix opening <font> tags
         text = re.sub(
             r"""(<\s*|[ \t]*)(/\s*|[ \t]*)font(\s*)color(\s*)=(\s*)["'](?P<color>[^"']+)["'](\s*)>""",
-            lambda m: f'<font color="{m['color']}">',
+            lambda m: '<font color="{color}">'.format(color=m['color']),
             text,
             flags=re.IGNORECASE)
         # fix closing <font> tags
         text = re.sub(r'(<\s*|[ \t]*)(/\s*|[ \t]*)font(\s*)>', '</font>', text, flags=re.IGNORECASE)
-        # simplify <font> tags leaving at most 2 characters out or only white space
+        # simplify <font> tags enclosing at most 2 characters out or only white space
         while True:
             updated_text = re.sub(
                 r'<font color="(?P<color1>[^"]+)">(?P<text1>[^<]*)</font>(?P<text2>\s*[^<]{0,2}\s*)<font color="(?P<color2>[^"]+)">',
-                lambda m: f'<font color="{m['color1']}">{m['text1']}{m['text2']}'
+                lambda m: '<font color="{color1}">{text1}{text2}'.format(
+                    color1=m['color1'], text1=m['text1'], text2=m['text2'])
                 if m['color1'] == m['color2'] else m[0],
                 text)
             if updated_text == text:
                 break
             text = updated_text
+        # fix space after opening <font> tags
+        text = re.sub(r"""<font([^>]*)>(\s+)""", r"\2<font\1>", text)
+        # fix space before closing <font> tags
+        text = re.sub(r"""(\s+)</font>""", r"</font>\1", text)
         # add missing space after dialog starting dash
-        text = re.sub(r'^[-—](?P<text>[^\s])', lambda m: f'- {m['text']}', text)
+        text = re.sub(r'^[-—](?P<text>[^\s])', lambda m: '- {text}'.format(text=m['text']), text)
         # simplify consecutive white spaces
         text = re.sub(r' {2,}', ' ', text)
         # strip white space at begining or lines
         text = re.sub(r'^\s*<font color="(?P<color>[^"]+)">\s*',
-                      lambda m: f'<font color="{m['color']}">', text, flags=re.MULTILINE).lstrip()
+                      lambda m: '<font color="{color}">'.format(color=m['color']), text, flags=re.MULTILINE).lstrip()
         # strip white space at end of lines
         text = re.sub(r'\s*</font>\s*$', '</font>', text, flags=re.MULTILINE).rstrip()
         return text
 
     @staticmethod
-    def apply_line_breaks(text: str, max_line_length: int = 50) -> str:
+    def apply_line_breaks(text: str, max_line_length: int = 45) -> str:
         text_info = TextInfo(text)
         if len(text_info.lines_info) != 1:
             return text
         line_info: TextLineInfo = text_info.lines_info[0]
         target_effective_index = math.ceil(line_info.effective_length / 2) + 1
-        for priority in range(3):
-            if priority > 0 and len(text) < max_line_length:
-                return text
-            priority_breaks = [b for b in line_info.candidate_breaks if b.priority == priority]
-            sorted_prority_breaks = sorted(priority_breaks, key=lambda b: b.distance_to(target_effective_index))
-            selected_break: TextLineBreak = next((b for b in sorted_prority_breaks), None)
-            # selected_break: TextLineBreak = next((b for b in sorted(
-            #     (b for b in line_info.candidate_breaks if b.priority == priority),
-            #     key=lambda b: -abs(target_break_effective_index - b.effective_index))), None)
-            if selected_break:
-                return text[:selected_break.index].strip() + "\n" + text[selected_break.index:].strip()
+        # for priority in range(3):
+        #     if priority > 0 and len(text) < max_line_length:
+        #         return text
+        #     priority_breaks = [b for b in line_info.candidate_breaks if b.priority == priority]
+        #     sorted_prority_breaks = sorted(priority_breaks, key=lambda b: b.distance_to(target_effective_index))
+        #     selected_break: TextLineBreak = next((b for b in sorted_prority_breaks), None)
+        #     if selected_break:
+        #         return text[:selected_break.index].strip() + "\n" + text[selected_break.index:].strip()
+        if line_info.effective_length < max_line_length and not any(b for b in line_info.candidate_breaks if b.priority == 0):
+            return text
+        sorted_prority_breaks = sorted(line_info.candidate_breaks,
+                                       key=lambda b: b.score(target_effective_index), reverse=True)
+        selected_break: TextLineBreak = next((b for b in sorted_prority_breaks), None)
+        if selected_break:
+            return text[:selected_break.index].strip() + "\n" + text[selected_break.index:].strip()
         return text
 
     def clean_up_subtitle(self, subtitle: Subtitle, ads_rules: List[str], hi_marks_rules: List[str]) -> GetResult:

@@ -2,11 +2,10 @@
 
 import os
 from pathlib import Path
-from subprocess import list2cmdline
 from typing import Literal
 from urllib.parse import quote_plus
 
-# CompressionType: TypeAlias = Literal['RAR', 'ZIP', '7Z']
+from resources.lib.utils.process import Process
 
 
 def _test_compression_type(file_path: Path = None, file_content: bytes = None) -> Literal['RAR', 'ZIP', '7Z']:
@@ -26,17 +25,15 @@ def _test_compression_type(file_path: Path = None, file_content: bytes = None) -
 
 
 def _uncompress_with_7z(compressed_file_path: Path, target_dir_path: Path) -> bool:
-    command_line = list2cmdline([
+    completed_process = Process.run([
         Compression.seven_zip_exec_path,
         "x",
         "-o" + str(target_dir_path),
         compressed_file_path])
-    completed_process = subprocess.run(command_line)
     return not completed_process.returncode
 
 
 try:
-    import subprocess
     import zipfile
 
     import xbmcvfs

@@ -65,6 +65,10 @@ msgctxt "#40003"
 msgid "Path to 7z executable (7-Zip decompression support)"
 msgstr "Ruta a ejecutable de 7z (soporte para decompresión de 7-Zip)"
 
+msgctxt "#40006"
+msgid "Path to MKVToolNix executables folder (MKV files subtitles extraction support)"
+msgstr "Ruta a directorio con ejecutables de MKVToolNix (suporte para extracción de subtítulos desde archivos MKV)"
+
 msgctxt "#40004"
 msgid "Exclude splitted subtitles from results"
 msgstr "Excluir subtítulos divididos de los resultados"

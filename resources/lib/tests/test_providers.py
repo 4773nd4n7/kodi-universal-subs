@@ -54,12 +54,12 @@ logger.info("Settings: %s", to_yaml(settings))
 
 # provider = Addic7edSourceProvider(settings)
 # provider = FileSystemSourceProvider(settings)
-# provider = LocalSourceProvider(settings)
+provider = LocalSourceProvider(settings)
 # provider = OpenSubtitlesSourceProvider(settings)
 # provider = PodnapisiSourceProvider(settings)
 # provider = SubDivXSourceProvider(settings)
 # provider = SubsceneSourceProvider(settings)
-provider = ProvidersRegistry.build_from_settings(settings)
+# provider = ProvidersRegistry.build_from_settings(settings)
 
 search_request = SearchRequest()
 search_request.set_file_url_or_path("C:/Example/TestFile.mkv")
@@ -72,13 +72,12 @@ search_request.languages = [
 # search_request.manual_search_text = "Aquaman"
 # search_request.title = "My Sassy Girl"
 # search_request.year = 2001
-search_request.title = "Black Sea"
-search_request.show_title = "Le indagini di Lolita Lobosco"
-search_request.show_season_number = 2
-search_request.show_episode_number = 1
-search_request.year = 2023
-search_request.set_file_url_or_path(
-    "file:///F:/Series/%28__OK__%29/Le%20indagini%20di%20Lolita%20Lobosco/Season%202/Le%20indagini%20di%20Lolita%20Lobosco%20S02E01%20Black%20Sea.mkv")
+search_request.title = "Starry-Eyed"
+search_request.show_title = "Sugar (2024)"
+search_request.show_season_number = 1
+search_request.show_episode_number = 4
+search_request.year = 2024
+search_request.set_file_url_or_path("F:/Series/(__VER__)/Sugar (2024)/Season 1/Sugar (2024) S01E04 Starry-Eyed.mkv")
 # search_request.show_title = "Pluto"
 # search_request.show_season_number = 1
 # search_request.show_episode_number = 3

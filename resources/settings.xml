@@ -158,6 +158,17 @@
                         <heading>40002</heading>
                     </control>
                 </setting>
+                <setting id="mkvtoolnix_path" type="path" label="40006" help="40006">
+                    <level>2</level>
+                    <default/>
+                    <constraints>
+                        <writable>false</writable>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="button" format="file">
+                        <heading>40002</heading>
+                    </control>
+                </setting>
                 <setting id="exclude_splitted_subtitles" type="boolean" label="40004" help="40004">
                     <level>2</level>
                     <default>true</default>

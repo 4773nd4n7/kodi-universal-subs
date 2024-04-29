@@ -25,6 +25,7 @@ from resources.lib.providers.providersregistry import ProvidersRegistry
 from resources.lib.providers.searchrequest import SearchRequest
 from resources.lib.utils.compression import Compression
 from resources.lib.utils.logging import init_logging_from_yaml
+from resources.lib.utils.media_info import MediaInfo
 from resources.lib.utils.yaml import to_yaml
 
 FILENAME_SHOW_EPISODE_RE = re.compile(
@@ -66,6 +67,10 @@ class SubtitleAddon:
         seven_zip_exec_path = kodi_addon_settings.getString("seven_zip_executable")
         if seven_zip_exec_path:
             Compression.seven_zip_exec_path = seven_zip_exec_path
+
+        mkvtoolnix_path = kodi_addon_settings.getString("mkvtoolnix_path")
+        if mkvtoolnix_path:
+            MediaInfo.mkvtoolnix_path = mkvtoolnix_path
 
         init_logging_from_yaml(self._settings.addon_path.joinpath('logging.kodi.yaml'))
         self._logger = logging.getLogger('UniversalSubs')

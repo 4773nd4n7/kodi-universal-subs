@@ -12,6 +12,7 @@ from resources.lib.providers.getresult import GetResult
 from resources.lib.providers.searchrequest import SearchRequest
 from resources.lib.providers.searchresult import SearchResult
 from resources.lib.providers.sourceprovider import SourceProvider
+from resources.lib.utils.media_info import MediaInfo
 from resources.lib.utils.text import normalize_text
 
 
@@ -51,18 +52,42 @@ class LocalSourceProvider(SourceProvider):
                 result.id = str(file_path)
                 result.title = file_name
                 result.release_info = result.id
+                result.is_sync = True
                 results.append(result)
                 if request.max_results and len(results) >= request.max_results:
                     return results
+        request_file_name = os.path.basename(request_base_file_path)
+        for stream_info in MediaInfo.parse_subtitle_streams(request.file_path):
+            result = SearchResult()
+            result.language = stream_info.language
+            if result.language != Language.unknown and request.languages and not result.language in request.languages:
+                continue
+            result.id = "{file_path}|{stream_id}".format(file_path=request.file_path, stream_id=stream_info.id)
+            result.title = request_file_name
+            result.release_info = "Track {stream_id}, {info}".format(
+                stream_id=stream_info.id, info=stream_info.sub_type)
+            result.is_sync = True
+            results.append(result)
+            if request.max_results and len(results) >= request.max_results:
+                return results
         return results
 
     def _get(self, request: GetRequest) -> List[GetResult]:
         results: List[GetResult] = []
-        file_path = Path(request.search_result_id)
-        if not file_path.exists():
-            self._logger.fatal("File not found: %s", file_path)
+        if "|" in request.search_result_id:
+            search_result_id_tokens = request.search_result_id.split("|", 1)
+            file_path = Path(search_result_id_tokens[0])
+            if not file_path.exists():
+                self._logger.fatal("File not found: %s", file_path)
+            else:
+                file_name, file_content = MediaInfo.extract_subtitle_stream(file_path, search_result_id_tokens[1])
+                results.append(self._build_get_result(file_name, file_content))
         else:
-            with open(file_path, 'rb') as file:
-                file_content: bytes = file.read()
-            results = self._process_get_subtitles_data(file_path.name, file_content)
+            file_path = Path(request.search_result_id)
+            if not file_path.exists():
+                self._logger.fatal("File not found: %s", file_path)
+            else:
+                with open(file_path, 'rb') as file:
+                    file_content: bytes = file.read()
+                results = self._process_get_subtitles_data(file_path.name, file_content)
         return results

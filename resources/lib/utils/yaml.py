@@ -27,7 +27,7 @@ def format_data_size(data_bytes: int) -> str:
         if abs(data_bytes) < 1024.0:
             return f"{data_bytes:3.1f} {unit}B"
         data_bytes /= 1024.0
-    return f"{data_bytes:.1f} YB"
+    return "{data_bytes:.1f} YB".format(data_bytes=data_bytes)
 
 
 def get_result_representer(dumper: yaml.SafeDumper, value: GetResult) -> yaml.nodes.MappingNode:

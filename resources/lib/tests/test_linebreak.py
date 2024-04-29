@@ -93,6 +93,35 @@ class TestTextLineBreak(unittest.TestCase):
         """
         self.__test_line_break(source_text, expected_text, 50)
 
+    def test_does_not_break_short_lines2(self) -> None:
+        source_text = """
+        <font color="#ffff00">- You arrived just in time.</font>
+        """
+        expected_text = """
+        <font color="#ffff00">- You arrived just in time.</font>
+        """
+        self.__test_line_break(source_text, expected_text, 50)
+
+    def test_breaks_with_font2(self) -> None:
+        source_text = """
+        - Oh... Claudio.<font color="#ffff00"> - Mink!</font>
+        """
+        expected_text = """
+        - Oh... Claudio.<font color="#ffff00">
+        - Mink!</font>
+        """
+        self.__test_line_break(source_text, expected_text, 50)
+
+    def test_breaks_with_font3(self) -> None:
+        source_text = """
+        - Oh... Claudio. <font color="#ffff00">- Mink!</font>
+        """
+        expected_text = """
+        - Oh... Claudio. <font color="#ffff00">
+        - Mink!</font>
+        """
+        self.__test_line_break(source_text, expected_text, 50)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,6 +4,7 @@ import re
 from html import unescape
 from typing import List
 
+import chardet
 from unidecode import unidecode
 
 
@@ -68,3 +69,8 @@ def strip_common_text(texts: List[str], strip_from_start: bool = True, strip_fro
                 break
             texts = [text[:-1] for text in texts]
     return texts
+
+
+def bytes_to_string(content: bytes) -> str:
+    detected_encoding = chardet.detect(content)["encoding"] or "utf-8"
+    return content.decode(detected_encoding, "ignore")
