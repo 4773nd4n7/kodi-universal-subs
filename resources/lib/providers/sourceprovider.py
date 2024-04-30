@@ -145,13 +145,13 @@ class SourceProvider(Provider):
                 result.is_sync = result.release_info and re.search(
                     re.escape(request_file_name), result.release_info, re.I) is not None
         if self._overrides_ratings_from_downloads:
-            max_downloads = float(max([sr.downloads for sr in results], default=0))
+            max_downloads = max(0, float(max([sr.downloads for sr in results], default=0)))
             for result in results:
                 result.rating = (result.downloads / max_downloads) * 5 if max_downloads else 0.0
         results = sorted(results, key=lambda search_result: self._compute_result_score(search_result), reverse=True)
-        # self._logger.info("Found %s search result(s):\n%s", len(results), to_yaml(results))
-        self._logger.info("Found %s search result(s):\n - %s", len(results),
-                          "\n - ".join(["%s | %s | %s" % (r.id, r.title, r.release_info) for r in results]))
+        self._logger.info("Found %s search result(s):\n%s", len(results), to_yaml(results))
+        # self._logger.info("Found %s search result(s):\n - %s", len(results),
+        #                  "\n - ".join(["%s | %s | %s" % (r.id, r.title, r.release_info) for r in results]))
         return results
 
     def __update_release_info(self, result: SearchResult) -> None:
@@ -165,7 +165,7 @@ class SourceProvider(Provider):
         if self._settings.include_author_on_results and result.author:
             result.release_info = "%s | by %s" % (result.release_info, result.author) \
                 if result.release_info else "by %s" % (result.author)
-        if self._settings.include_downloads_on_results:
+        if self._settings.include_downloads_on_results and result.downloads >= 0:
             result.release_info = "%s | %s dls" % (result.release_info, result.downloads) \
                 if result.release_info else "%s dls" % (result.downloads)
 

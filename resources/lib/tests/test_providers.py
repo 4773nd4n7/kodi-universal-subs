@@ -34,17 +34,19 @@ Compression.seven_zip_exec_path = Path("C:/Program Files/7-Zip/7z.exe")
 
 settings = Settings()
 settings.addon_id = "service.subtitles.universalsubs"
-settings.addon_path = Path(__file__).joinpath("..", "..", "..", "..").resolve()
+settings.addon_path = Path(os.environ["UNIVERSAL_SUBS_PATH"]).resolve()
 settings.addon_user_path = Path(os.environ["UNIVERSAL_SUBS_USER_PATH"]).resolve()
 settings.include_author_on_results = False
 settings.providers = ["OpenSubtitles", "Subscene", "PodnapisiNET", "SubDivX", "Addic7ed", "Local", "FileSystem"]
+# settings.providers = ["Local"]
 settings.file_system_provider_path = Path("G:/Subtitulos")
 settings.search_cache_ttl = timedelta(days=7)
 settings.translation_cache_ttl = timedelta(days=30)
 settings.translators = ["Google", "Libre", "Bing"]
-# settings.translators = ["Google"]
+settings.translators = ["Google"]
 settings.translators = []
 settings.cache_whole_requests = True
+settings.clean_up_subtitles = False
 
 
 init_logging_from_yaml(settings.addon_path.joinpath('logging.test.yaml'))
@@ -54,34 +56,31 @@ logger.info("Settings: %s", to_yaml(settings))
 
 # provider = Addic7edSourceProvider(settings)
 # provider = FileSystemSourceProvider(settings)
-provider = LocalSourceProvider(settings)
+# provider = LocalSourceProvider(settings)
 # provider = OpenSubtitlesSourceProvider(settings)
 # provider = PodnapisiSourceProvider(settings)
 # provider = SubDivXSourceProvider(settings)
 # provider = SubsceneSourceProvider(settings)
-# provider = ProvidersRegistry.build_from_settings(settings)
+provider = ProvidersRegistry.build_from_settings(settings)
 
 search_request = SearchRequest()
-search_request.set_file_url_or_path("C:/Example/TestFile.mkv")
-search_request.max_results = 100
+search_request.max_results = 50
 search_request.languages = [
     Language.english,
     Language.spanish,
-    Language.italian,
 ]
-# search_request.manual_search_text = "Aquaman"
-# search_request.title = "My Sassy Girl"
-# search_request.year = 2001
-search_request.title = "Starry-Eyed"
-search_request.show_title = "Sugar (2024)"
-search_request.show_season_number = 1
-search_request.show_episode_number = 4
-search_request.year = 2024
-search_request.set_file_url_or_path("F:/Series/(__VER__)/Sugar (2024)/Season 1/Sugar (2024) S01E04 Starry-Eyed.mkv")
-# search_request.show_title = "Pluto"
-# search_request.show_season_number = 1
-# search_request.show_episode_number = 3
-# search_request.year = 2023
+# search_request.title = "Talento mortale"
+# search_request.show_title = "L'allieva"
+# search_request.show_season_number = 2
+# search_request.show_episode_number = 10
+# search_request.year = 2020
+# search_request.set_file_url_or_path(
+#    "F:/Series/(__VER_RECODE__)/L'allieva/Season 2/L'allieva S02E10 Talento mortale.mkv")
+#
+search_request.title = "A Bronx Tale"
+search_request.year = 1993
+search_request.set_file_url_or_path("G:/Peliculas/(__OK__)/A Bronx Tale (1995) [1080p]/A Bronx Tale.mp4")
+
 search_request.file_languages = [Language.unknown]
 search_results = provider.search(search_request)
 

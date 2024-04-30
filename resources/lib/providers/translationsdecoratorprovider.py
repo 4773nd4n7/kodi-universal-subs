@@ -27,27 +27,31 @@ class TranslationsDecoratorProvider(DecoratorProvider):
 
     def build_source_search_request(self, request: SearchRequest) -> SearchRequest:
         request = copy.deepcopy(request)
-        if request.languages is None:
-            request.languages = []
-        for extra_language in (self.request_extra_languages + request.file_languages):
-            if extra_language != Language.unknown and not extra_language in request.languages:
-                request.languages.append(extra_language)
+        extra_languages = [
+            extra_language
+            for extra_language in (self.request_extra_languages or []) + (request.file_languages or [])
+            if extra_language != Language.unknown and not extra_language in request.languages
+        ]
+        if len(extra_languages):
+            original_request_languages: List[Language] = request.languages.copy()
+            request.count_result_predicate = lambda r: r.language == Language.unknown or r.language in original_request_languages
+            request.languages.extend(extra_languages)
         return request
 
-    def __build_search_result(self, source_result: SearchResult, language: Language, translator: SubtitleTranslator = None) -> SearchResult:
+    def __build_search_result(self, source_result: SearchResult, target_language: Language, translator: SubtitleTranslator = None) -> SearchResult:
         result = copy.deepcopy(source_result)
         result.id = "%s|%s|%s|%s" % (
             translator.name if translator else '',
             source_result.language.three_letter_code,
-            language.three_letter_code,
+            target_language.three_letter_code,
             source_result.id)
-        result.language = language
+        result.language = target_language
         if translator:
             result.provider_name = translator.name + "|" + result.provider_name
             result.title = "%s %s:%s | %s" % (
                 translator.short_name if translator else '',
                 source_result.language.three_letter_code,
-                language.three_letter_code,
+                target_language.three_letter_code,
                 result.title)
         return result
 
@@ -59,8 +63,11 @@ class TranslationsDecoratorProvider(DecoratorProvider):
                 original_result = self.__build_search_result(source_result, Language.unknown)
                 original_results.append(original_result)
                 continue
+            # NOTE:
+            # 'request' is the original request passed along to the decorator provider
+            # 'source_request' is the modified request built by the decorator that is provided to the source/decorated provider
             for request_language in request.languages:
-                if source_result.language == request_language:
+                if request_language == source_result.language:
                     original_result = self.__build_search_result(source_result, source_result.language)
                     original_results.append(original_result)
                     continue
@@ -78,7 +85,6 @@ class TranslationsDecoratorProvider(DecoratorProvider):
         return request
 
     def _transform_get_results(self, request: GetRequest, source_request: GetRequest, source_results: List[GetResult]) -> List[GetResult]:
-
         search_result_id_parts = request.search_result_id.split("|", 3)
         from_language = Language.from_three_letter_code(search_result_id_parts[1])
         to_language = Language.from_three_letter_code(search_result_id_parts[2])

@@ -8,7 +8,8 @@ from resources.lib.common.mappedlanguages import MappedLanguages
 from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
-from resources.lib.providers.searchrequest import SearchRequest
+from resources.lib.providers.searchrequest import (SearchRequest,
+                                                   SearchResultsCounter)
 from resources.lib.providers.searchresult import SearchResult
 from resources.lib.providers.sourceprovider import SourceProvider
 from resources.lib.utils.httpclient import HttpRequest
@@ -45,6 +46,7 @@ class SubDivXSourceProvider(SourceProvider):
         http_response = self._http_client.exchange(http_request)
         results_data: Dict[str, Any] = http_response.get_data_as_json()
         results: List[SearchResult] = []
+        results_counter: SearchResultsCounter = request.build_counter()
         for result_data in results_data["aaData"]:
             if self._settings.exclude_splitted_subtitles and result_data.get("cds", 1) > 1:
                 continue
@@ -57,7 +59,8 @@ class SubDivXSourceProvider(SourceProvider):
             result.rating = float(str(result_data.get("calificacion", "")).count(STAR_HTML))  # count number of stars
             result.language = Language.spanish
             results.append(result)
-            if request.max_results and len(results) >= request.max_results:
+            results_counter.try_accept_result(result)
+            if results_counter.reached_max_results:
                 return results
         return results
 

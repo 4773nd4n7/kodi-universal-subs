@@ -3,17 +3,46 @@
 import os
 from pathlib import Path
 from re import IGNORECASE, UNICODE, compile
-from typing import List
+from typing import Callable, List
 from urllib.parse import ParseResult, unquote, urlparse
 from urllib.request import url2pathname
 
 from resources.lib.common.language import Language
+from resources.lib.providers.searchresult import SearchResult
 
 URL_REGEX = compile(r'[A-z]+://.*', IGNORECASE | UNICODE)
 
 
 def is_file_path(file_path_or_url: str) -> bool:
     return not URL_REGEX.search(file_path_or_url)
+
+
+class SearchResultsCounter:
+
+    def __init__(self, max_results: int, accept_result_predicate: Callable[[SearchResult], bool]) -> None:
+        self._max_results: int = max_results
+        self._accept_result_predicate: Callable[[SearchResult], bool] = accept_result_predicate
+        self._accepted_results: int = 0
+
+    def try_accept_result(self, search_result: SearchResult) -> bool:
+        if not self._accept_result_predicate or self._accept_result_predicate(search_result):
+            self._accepted_results += 1
+
+    @property
+    def max_results(self) -> int:
+        return self._max_results
+
+    @property
+    def accepted_results(self) -> int:
+        return self._accepted_results
+
+    @property
+    def pending_results(self) -> int:
+        return self._max_results - self._accepted_results if self._max_results else 0
+
+    @property
+    def reached_max_results(self) -> bool:
+        return self._accepted_results >= self._max_results if self._max_results else False
 
 
 class SearchRequest:
@@ -28,6 +57,7 @@ class SearchRequest:
     file_url: str
     file_languages: List[Language] = []
     max_results: int = 50
+    count_result_predicate: Callable[[SearchResult], bool] = None
 
     @property
     def is_show_search(self) -> bool:
@@ -63,3 +93,6 @@ class SearchRequest:
     def set_file_url_or_path(self, file_path_or_url: str) -> None:
         url = Path(file_path_or_url).as_uri() if is_file_path(file_path_or_url) else file_path_or_url
         self.file_url = url
+
+    def build_counter(self) -> SearchResultsCounter:
+        return SearchResultsCounter(self.max_results, self.count_result_predicate)

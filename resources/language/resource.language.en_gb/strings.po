@@ -21,24 +21,56 @@ msgctxt "#30001"
 msgid "Subtitle providers to use"
 msgstr ""
 
+msgctxt "#300011"
+msgid "Providers to use for searching subtitles."
+msgstr ""
+
 msgctxt "#30002"
 msgid "Suggest automatic translations from:"
 msgstr ""
 
+msgctxt "#300021"
+msgid "Engines to use for offering automatic subtitle translations."
+msgstr ""
+
 msgctxt "#30003"
-msgid "Clean up subtitles"
+msgid "Extra languages for translations:"
+msgstr ""
+
+msgctxt "#300031"
+msgid "Additional languages to search subtitles for in order to feed them to automatic translations engine(s)."
 msgstr ""
 
 msgctxt "#30004"
-msgid "Include author in search results"
+msgid "Clean up subtitles"
+msgstr ""
+
+msgctxt "#300041"
+msgid "When enabled, cleaned up tasks will be performed on donwloaded subtitles."
 msgstr ""
 
 msgctxt "#30005"
-msgid "Include downloads in search results"
+msgid "Include author in search results"
+msgstr ""
+
+msgctxt "#300051"
+msgid "When enabled, author name will be appended to subtitles description if available."
 msgstr ""
 
 msgctxt "#30006"
+msgid "Include downloads in search results"
+msgstr ""
+
+msgctxt "#300061"
+msgid "When enabled, downloads count will be appended to subtitles description if available."
+msgstr ""
+
+msgctxt "#30007"
 msgid "Maximum search results"
+msgstr ""
+
+msgctxt "#300071"
+msgid "Maximum number of search results to fetch."
 msgstr ""
 
 msgctxt "#50000"

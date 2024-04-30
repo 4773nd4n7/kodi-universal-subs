@@ -803,6 +803,13 @@ class Language:
         return self.two_letter_code == code or self.three_letter_code == code
 
     @staticmethod
+    def from_standard_name(name: str) -> "Language":
+        try:
+            return Language(name)
+        except Exception as e:
+            return None
+
+    @staticmethod
     def from_two_letter_code(two_letter_code: str) -> "Language":
         assert two_letter_code
         name = TWO_LETTER_CODE_TO_NAME.get(

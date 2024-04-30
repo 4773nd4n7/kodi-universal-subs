@@ -9,7 +9,8 @@ from resources.lib.common.mappedlanguages import MappedLanguages
 from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
-from resources.lib.providers.searchrequest import SearchRequest
+from resources.lib.providers.searchrequest import (SearchRequest,
+                                                   SearchResultsCounter)
 from resources.lib.providers.searchresult import SearchResult
 from resources.lib.providers.sourceprovider import SourceProvider
 from resources.lib.utils.media_info import MediaInfo
@@ -33,6 +34,7 @@ class LocalSourceProvider(SourceProvider):
         results: List[SearchResult] = []
         if not request.is_file:
             return results
+        results_counter: SearchResultsCounter = request.build_counter()
         request_base_file_path = os.path.splitext(str(request.file_path))[0]
         for root_name, _, file_names in os.walk(request.file_path.parent):
             root_path = Path(root_name)
@@ -53,8 +55,10 @@ class LocalSourceProvider(SourceProvider):
                 result.title = file_name
                 result.release_info = result.id
                 result.is_sync = True
+                result.downloads = -1
                 results.append(result)
-                if request.max_results and len(results) >= request.max_results:
+                results_counter.try_accept_result(result)
+                if results_counter.reached_max_results:
                     return results
         request_file_name = os.path.basename(request_base_file_path)
         for stream_info in MediaInfo.parse_subtitle_streams(request.file_path):
@@ -67,8 +71,10 @@ class LocalSourceProvider(SourceProvider):
             result.release_info = "Track {stream_id}, {info}".format(
                 stream_id=stream_info.id, info=stream_info.sub_type)
             result.is_sync = True
+            result.downloads = -1
             results.append(result)
-            if request.max_results and len(results) >= request.max_results:
+            results_counter.try_accept_result(result)
+            if results_counter.reached_max_results:
                 return results
         return results
 

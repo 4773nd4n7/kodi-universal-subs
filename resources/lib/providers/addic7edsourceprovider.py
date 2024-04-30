@@ -9,7 +9,8 @@ from resources.lib.common.mappedlanguages import MappedLanguages
 from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
-from resources.lib.providers.searchrequest import SearchRequest
+from resources.lib.providers.searchrequest import (SearchRequest,
+                                                   SearchResultsCounter)
 from resources.lib.providers.searchresult import SearchResult
 from resources.lib.providers.sourceprovider import SourceProvider
 from resources.lib.utils.httpclient import HttpRequest
@@ -161,6 +162,7 @@ class Addic7edSourceProvider(SourceProvider):
     def _fetch_search_results(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[SearchResult]:
         results: List[SearchResult] = []
         titles = self.__fetch_search_title_urls(request)
+        results_counter: SearchResultsCounter = request.build_counter()
         for title_index, (title_name, title_url) in enumerate(titles[:MAX_TITLE_RESULTS]):
             self._logger.info("Processing search results for title %s" % title_name)
             http_request = HttpRequest(title_url)
@@ -187,7 +189,8 @@ class Addic7edSourceProvider(SourceProvider):
                     result_tbody.select_one('td.newsDate[colspan="2"]').get_text(strip=True)))
                 result.is_hearing_impaired = False  # no way to detect if match has information for  HI
                 results.append(result)
-                if request.max_results and len(results) >= request.max_results:
+                results_counter.try_accept_result(result)
+                if results_counter.reached_max_results:
                     return results
         return results
 

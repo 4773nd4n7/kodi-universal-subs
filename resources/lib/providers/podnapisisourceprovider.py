@@ -10,7 +10,8 @@ from resources.lib.common.mappedlanguages import MappedLanguages
 from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
-from resources.lib.providers.searchrequest import SearchRequest
+from resources.lib.providers.searchrequest import (SearchRequest,
+                                                   SearchResultsCounter)
 from resources.lib.providers.searchresult import SearchResult
 from resources.lib.providers.sourceprovider import SourceProvider
 from resources.lib.utils.httpclient import HttpRequest
@@ -195,6 +196,7 @@ class PodnapisiSourceProvider(SourceProvider):
 
     def _fetch_search_results(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[SearchResult]:
         results: List[SearchResult] = []
+        results_counter: SearchResultsCounter = request.build_counter()
         page = 1
         while page:
             row_tags, page = self.__fetch_search_results_page(request, request_internal_languages, page)
@@ -220,7 +222,8 @@ class PodnapisiSourceProvider(SourceProvider):
                 downloads_tag = rating_td_tag.find_previous("td").find_previous("td")
                 result.downloads = int(downloads_tag.get_text(strip=True))
                 results.append(result)
-                if request.max_results and len(results) >= request.max_results:
+                results_counter.try_accept_result(result)
+                if results_counter.reached_max_results:
                     return results
         return results
 

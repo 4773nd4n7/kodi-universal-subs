@@ -12,7 +12,8 @@ from resources.lib.common.mappedlanguages import MappedLanguages
 from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
-from resources.lib.providers.searchrequest import SearchRequest
+from resources.lib.providers.searchrequest import (SearchRequest,
+                                                   SearchResultsCounter)
 from resources.lib.providers.searchresult import SearchResult
 from resources.lib.providers.sourceprovider import SourceProvider
 from resources.lib.utils.httpclient import HttpRequest
@@ -271,6 +272,7 @@ class OpenSubtitlesSourceProvider(SourceProvider):
 
     def _fetch_search_results(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[SearchResult]:
         results: List[SearchResult] = []
+        results_counter: SearchResultsCounter = request.build_counter()
         titles = self.__fetch_search_title_urls(request, request_internal_languages)
         for title_index, (title_name, title_url) in enumerate(titles[:MAX_TITLE_RESULTS]):
             self._logger.info("Processing search results for title %s" % title_name)
@@ -283,11 +285,15 @@ class OpenSubtitlesSourceProvider(SourceProvider):
                 result = self.__parse_single_search_result(http_response.get_data_as_html())
                 if result:
                     results.append(result)
+                    results_counter.try_accept_result(result)
+                    if results_counter.reached_max_results:
+                        return results
             else:
-                results.extend(self.__parse_many_search_results(http_response.get_data_as_html()))
-            if request.max_results and len(results) >= request.max_results:
-                results = results[:request.max_results]
-                break
+                for result in self.__parse_many_search_results(http_response.get_data_as_html()):
+                    results.append(result)
+                    results_counter.try_accept_result(result)
+                    if results_counter.reached_max_results:
+                        return results
         return results
 
     def _get(self, request: GetRequest) -> List[GetResult]:

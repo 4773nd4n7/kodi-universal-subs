@@ -21,7 +21,9 @@ class Settings:
         Language.chinese,
         Language.hindi,
         Language.spanish,
-        Language.french
+        Language.french,
+        Language.portuguese,
+        Language.italian
     ]
     include_author_on_results: bool = True
     include_downloads_on_results: bool = True

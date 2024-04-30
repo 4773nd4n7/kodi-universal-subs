@@ -19,6 +19,7 @@ from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
 from resources.lib.providers.provider import Provider
 from resources.lib.utils.httpclient import HttpClient, HttpRequest
+from resources.lib.utils.text import apply_until_unmodified
 
 TAG_MARKERS: List[str] = ["<font ", "<font>", "</font"]
 PAUSE_MARKERS: List[str] = [',', ';', ':', '.', '?', '!']
@@ -35,7 +36,7 @@ class TextLineBreak:
 
     def score(self, target_effective_index: int) -> int:
         if self.priority == 0:
-            return 10 - self.distance_to(target_effective_index)
+            return 15 - self.distance_to(target_effective_index)
         elif self.priority == 1:
             return 4 - self.distance_to(target_effective_index)
         else:
@@ -160,35 +161,43 @@ class CleanupDecoratorProvider(DecoratorProvider):
         # fix opening <font> tags
         text = re.sub(
             r"""(<\s*|[ \t]*)(/\s*|[ \t]*)font(\s*)color(\s*)=(\s*)["'](?P<color>[^"']+)["'](\s*)>""",
-            lambda m: '<font color="{color}">'.format(color=m['color']),
+            r'<font color="\g<color>">',
             text,
             flags=re.IGNORECASE)
         # fix closing <font> tags
         text = re.sub(r'(<\s*|[ \t]*)(/\s*|[ \t]*)font(\s*)>', '</font>', text, flags=re.IGNORECASE)
         # simplify <font> tags enclosing at most 2 characters out or only white space
-        while True:
-            updated_text = re.sub(
-                r'<font color="(?P<color1>[^"]+)">(?P<text1>[^<]*)</font>(?P<text2>\s*[^<]{0,2}\s*)<font color="(?P<color2>[^"]+)">',
-                lambda m: '<font color="{color1}">{text1}{text2}'.format(
-                    color1=m['color1'], text1=m['text1'], text2=m['text2'])
-                if m['color1'] == m['color2'] else m[0],
-                text)
-            if updated_text == text:
-                break
-            text = updated_text
+        text = apply_until_unmodified(text, lambda t: re.sub(
+            r'<font color="(?P<color>[^"]+)">(?P<text1>[^<]*)</font>(?P<text2>\s*[^<]{0,2}\s*)<font color="(?P=color)">',
+            r'<font color="\g<color>">\g<text1>\g<text2>', t))
+        text = apply_until_unmodified(text, lambda t: re.sub(
+            r'(?P<before>^|</font>)(?P<text>\s*[^<]{0,2}\s*)(?P<font><font[^>]*>)',
+            r'\g<before>\g<font>\g<text>', t))
+        # add missing space after dialog marker
+        text = re.sub(
+            r'(?P<before>^\s*|^\s*<font[^>]*>\s*|[\.!\?\)\]\}]\s*</?font[^>]*>\s*|[\.!\?\)\]\}]\s*</font>\s*<font[^>]*>\s*|[\.!\?\)\]\}]\s*)[-—]',
+            r'\g<before> - ', text)
         # fix space after opening <font> tags
         text = re.sub(r"""<font([^>]*)>(\s+)""", r"\2<font\1>", text)
         # fix space before closing <font> tags
         text = re.sub(r"""(\s+)</font>""", r"</font>\1", text)
-        # add missing space after dialog starting dash
-        text = re.sub(r'^[-—](?P<text>[^\s])', lambda m: '- {text}'.format(text=m['text']), text)
+        # remove white space before special characters
+        text = re.sub(r'\s+([,\.;:!\?\)\]\}])', r"\1", text)
+        # remove white space after special characters
+        text = re.sub(r'(¡¿\(\[\{])\s+', r"\1", text)
         # simplify consecutive white spaces
         text = re.sub(r' {2,}', ' ', text)
-        # strip white space at begining or lines
-        text = re.sub(r'^\s*<font color="(?P<color>[^"]+)">\s*',
-                      lambda m: '<font color="{color}">'.format(color=m['color']), text, flags=re.MULTILINE).lstrip()
+        # strip white space at begining of lines
+        text = re.sub(r'^\s*(<font[^>]*>)">\s*', r"\1", text, flags=re.MULTILINE)
+        text = re.sub(r'^\s+', r"", text, flags=re.MULTILINE)
+        text = text.lstrip()
         # strip white space at end of lines
-        text = re.sub(r'\s*</font>\s*$', '</font>', text, flags=re.MULTILINE).rstrip()
+        text = re.sub(r'\s*</font>\s*$', r'</font>', text, flags=re.MULTILINE)
+        text = re.sub(r'\s+$', r'', text, flags=re.MULTILINE)
+        text = text.rstrip()
+        # strip single dialog marker
+        if len(re.findall(r"- ", text)) == 1 and re.match(r"(^- |^<font[^>]*>- )", text):
+            text = re.sub(r"(^|^<font[^>]*>)- ", r"\1", text)
         return text
 
     @staticmethod
@@ -198,14 +207,6 @@ class CleanupDecoratorProvider(DecoratorProvider):
             return text
         line_info: TextLineInfo = text_info.lines_info[0]
         target_effective_index = math.ceil(line_info.effective_length / 2) + 1
-        # for priority in range(3):
-        #     if priority > 0 and len(text) < max_line_length:
-        #         return text
-        #     priority_breaks = [b for b in line_info.candidate_breaks if b.priority == priority]
-        #     sorted_prority_breaks = sorted(priority_breaks, key=lambda b: b.distance_to(target_effective_index))
-        #     selected_break: TextLineBreak = next((b for b in sorted_prority_breaks), None)
-        #     if selected_break:
-        #         return text[:selected_break.index].strip() + "\n" + text[selected_break.index:].strip()
         if line_info.effective_length < max_line_length and not any(b for b in line_info.candidate_breaks if b.priority == 0):
             return text
         sorted_prority_breaks = sorted(line_info.candidate_breaks,

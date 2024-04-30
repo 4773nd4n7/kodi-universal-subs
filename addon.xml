@@ -25,8 +25,12 @@
 		<forum>https://forum.kodi.tv/showthread.php?tid=xxxx</forum>
 		<email>attendant51@gmail.com</email>
 		<source>https://github.com/4773nd4n7/kodi-universal-subs</source>
-		<news>v1.0.1 (03/25/2024)
-		Improved building of search request information for items not in database.
+		<news>v1.0.2 (05/05/2024)
+		- Added Local source provider.
+		- Improved code cleanup decorator provider.
+		- Fixed downloading in SubDivX source provider.
+		- Added support for configuring additional languages to be included as translations source.
+		- Fixed additional bugs.
 		</news>
 		<assets>
 			<icon>icon.png</icon>

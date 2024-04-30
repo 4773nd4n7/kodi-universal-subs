@@ -6,7 +6,8 @@ from typing import List
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
 from resources.lib.providers.provider import Provider
-from resources.lib.providers.searchrequest import SearchRequest
+from resources.lib.providers.searchrequest import (SearchRequest,
+                                                   SearchResultsCounter)
 from resources.lib.providers.searchresult import SearchResult
 
 
@@ -25,20 +26,21 @@ class CompositeProvider(Provider):
 
     def search(self, request: SearchRequest) -> List[SearchResult]:
         results: List[SearchResult] = []
+        results_counter: SearchResultsCounter = request.build_counter()
         for source in self.sources:
             try:
                 source_request = request
                 if request.max_results:
-                    source_request = copy.deepcopy(source_request)
-                    source_request.max_results = request.max_results - len(results)
+                    source_request = copy.deepcopy(request)
+                    source_request.max_results = request.max_results - results_counter.accepted_results
                 source_results = source.search(source_request)
                 for source_result in source_results:
                     source_result.title = "%s | %s" % (source.short_name, source_result.title)
                     source_result.id = "%s|%s" % (source.name, source_result.id)
-                results.extend(source_results)
-                if request.max_results and len(results) > request.max_results:
-                    results = results[0:request.max_results]
-                    break
+                    results.append(source_result)
+                    results_counter.try_accept_result(source_result)
+                    if results_counter.reached_max_results:
+                        return results
             except Exception as e:
                 self._logger.error("Caught error fetching results from %s provider." % source.name, exc_info=True)
         return results

@@ -26,18 +26,22 @@ msgid "Suggest automatic translations from:"
 msgstr "Sugerir traducciones automáticas de:"
 
 msgctxt "#30003"
+msgid "Extra languages for translations:"
+msgid "Lenguages adicionales para traducciones:"
+
+msgctxt "#30004"
 msgid "Clean up subtitles"
 msgstr "Limpiar subtítulos"
 
-msgctxt "#30004"
+msgctxt "#30005"
 msgid "Include author in search results"
 msgstr "Incluir autor en resultados de búsqueda"
 
-msgctxt "#30005"
+msgctxt "#30006"
 msgid "Include downloads in search results"
 msgstr "Incluir descargas en resultados de búsqueda"
 
-msgctxt "#30006"
+msgctxt "#30007"
 msgid "Maximum search results"
 msgstr "Máxima cantidad de resultados de búsqueda"
 

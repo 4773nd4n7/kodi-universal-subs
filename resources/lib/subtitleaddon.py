@@ -53,9 +53,14 @@ class SubtitleAddon:
         self._settings.file_system_provider_path = Path(kodi_addon_settings.getString("file_system_provider_path"))
         self._settings.cache_whole_requests = kodi_addon_settings.getBool("cache_whole_requests")
         self._settings.exclude_splitted_subtitles = kodi_addon_settings.getBool("exclude_splitted_subtitles")
-        if not self._settings.file_system_provider_path.exists():
+        if not self._settings.file_system_provider_path.exists() and "FileSystem" in self._settings.providers:
             self._settings.providers.remove("FileSystem")
         self._settings.translators = kodi_addon_settings.getStringList("translators")
+        if len(self._settings.translators) > 0:
+            self._settings.translation_extra_languages = [language for language in [
+                Language.from_standard_name(lang_name)
+                for lang_name in kodi_addon_settings.getStringList("translation_extra_languages")
+            ] if language is not None]
 
         self._settings.clean_up_subtitles = kodi_addon_settings.getBool("clean_up_subtitles")
         self._settings.clean_up_ads = kodi_addon_settings.getBool("clean_up_ads")

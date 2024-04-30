@@ -2,7 +2,7 @@
 
 import re
 from html import unescape
-from typing import List
+from typing import Callable, List
 
 import chardet
 from unidecode import unidecode
@@ -74,3 +74,11 @@ def strip_common_text(texts: List[str], strip_from_start: bool = True, strip_fro
 def bytes_to_string(content: bytes) -> str:
     detected_encoding = chardet.detect(content)["encoding"] or "utf-8"
     return content.decode(detected_encoding, "ignore")
+
+
+def apply_until_unmodified(text: str, function: Callable[[str], str]) -> str:
+    while True:
+        updated_text = function(text)
+        if updated_text == text:
+            return updated_text
+        text = updated_text

@@ -9,7 +9,8 @@ from resources.lib.common.mappedlanguages import MappedLanguages
 from resources.lib.common.settings import Settings
 from resources.lib.providers.getrequest import GetRequest
 from resources.lib.providers.getresult import GetResult
-from resources.lib.providers.searchrequest import SearchRequest
+from resources.lib.providers.searchrequest import (SearchRequest,
+                                                   SearchResultsCounter)
 from resources.lib.providers.searchresult import SearchResult
 from resources.lib.providers.sourceprovider import SourceProvider
 from resources.lib.utils.text import normalize_text
@@ -34,6 +35,7 @@ class FileSystemSourceProvider(SourceProvider):
         normalized_search_term = normalize_text(self._build_search_term(request))
         if not normalized_search_term:
             return results
+        results_counter: SearchResultsCounter = request.build_counter()
         for root_name, _, file_names in os.walk(self.root_path):
             root_path = Path(root_name)
             normalized_root_name = normalize_text(root_name)
@@ -52,8 +54,10 @@ class FileSystemSourceProvider(SourceProvider):
                 result.id = str(root_path.joinpath(file_name))
                 result.title = file_name
                 result.release_info = result.id
+                result.downloads = -1
                 results.append(result)
-                if request.max_results and len(results) >= request.max_results:
+                results_counter.try_accept_result(result)
+                if results_counter.reached_max_results:
                     return results
         return results
 
