@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 from pathlib import Path
 from typing import List
 
@@ -45,7 +46,9 @@ class LocalSourceProvider(SourceProvider):
                 if not str(file_path).startswith(request_base_file_path):
                     continue
                 result = SearchResult()
-                file_language_code = os.path.splitext(os.path.splitext(file_name)[0])[1][1:].split(" ")[0]
+                request_base_file_path_length = len(request_base_file_path)
+                file_language_code = os.path.splitext(str(file_path))[0]
+                file_language_code = file_language_code[request_base_file_path_length+1:request_base_file_path_length+3]
                 result.language = Language.from_two_letter_code(file_language_code) \
                     if file_language_code \
                     else Language.unknown
@@ -53,23 +56,23 @@ class LocalSourceProvider(SourceProvider):
                     continue
                 result.id = str(file_path)
                 result.title = file_name
-                result.release_info = result.id
                 result.is_sync = True
                 result.downloads = -1
                 results.append(result)
                 results_counter.try_accept_result(result)
                 if results_counter.reached_max_results:
                     return results
-        request_file_name = os.path.basename(request_base_file_path)
-        for stream_info in MediaInfo.parse_subtitle_streams(request.file_path):
+        request_file_name = os.path.basename(request.file_path)
+        for stream in MediaInfo.parse_subtitle_streams(request.file_path):
             result = SearchResult()
-            result.language = stream_info.language
+            result.language = stream.language
             if result.language != Language.unknown and request.languages and not result.language in request.languages:
                 continue
-            result.id = "{file_path}|{stream_id}".format(file_path=request.file_path, stream_id=stream_info.id)
+            result.id = "{file_path}|{stream_id}".format(file_path=request.file_path, stream_id=stream.id)
             result.title = request_file_name
-            result.release_info = "Track {stream_id}, {info}".format(
-                stream_id=stream_info.id, info=stream_info.sub_type)
+            result.release_info = "Track {stream_id}, {info} | {name}".format(stream_id=stream.id, info=stream.sub_type, name=stream.name) \
+                if stream.name \
+                else "Track {stream_id}, {info}".format(stream_id=stream.id, info=stream.sub_type)
             result.is_sync = True
             result.downloads = -1
             results.append(result)

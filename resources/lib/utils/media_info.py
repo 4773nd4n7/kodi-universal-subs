@@ -15,11 +15,12 @@ from resources.lib.utils.process import Process
 
 class StreamInfo:
 
-    def __init__(self, id: str, language: Language, type: Literal['video', 'audio', 'subtitles'], sub_type: str) -> None:
+    def __init__(self, id: str, language: Language, type: Literal['video', 'audio', 'subtitles'], sub_type: str, name: str) -> None:
         self.id: str = id
         self.language: Language = language
         self.type: Literal['video', 'audio', 'subtitles'] = type
         self.sub_type: str = sub_type
+        self.name: str = name
 
 
 class MediaInfo:
@@ -48,9 +49,10 @@ class MediaInfo:
             streams_info = [
                 StreamInfo(
                     str(file_track["id"]),
-                    Language.from_two_letter_code(file_track["properties"]["language_ietf"]),
+                    Language.from_two_letter_code(file_track["properties"].get("language_ietf", 'xx')),
                     file_track["type"],
-                    file_track["codec"])
+                    file_track["codec"],
+                    file_track["properties"].get("track_name", None))
                 for file_track in file_tracks
             ]
             return streams_info
