@@ -17,7 +17,7 @@ class Cache:
     def __init__(self, cache_name: str, storage_path: Path = None, cache_ttl: timedelta = timedelta()):
         assert cache_name
         self._logger: logging.Logger = logging.getLogger(cache_name)
-        if cache_ttl.total_seconds() > 0:
+        if storage_path and cache_ttl.total_seconds() > 0:
             self._cache = PersistentCache(
                 TTLCache,
                 filename=storage_path.as_posix(),

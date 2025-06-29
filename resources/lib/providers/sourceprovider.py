@@ -58,7 +58,8 @@ class SourceProvider(Provider):
 
     def __init__(self,
                  settings: Settings,
-                 supported_languages: MappedLanguages):
+                 supported_languages: MappedLanguages,
+                 disable_cache: bool = False) -> None:
         super().__init__()
         self.__settings = settings
         self.__supported_languages = supported_languages
@@ -66,7 +67,10 @@ class SourceProvider(Provider):
             'UniversalSubs.Cache.Provider.' + self.name,
             settings.addon_user_path.joinpath("cache-provider-" + self.name.lower()),
             settings.search_cache_ttl)
-        if settings.cache_whole_requests:
+        if disable_cache:
+            self.__cache = Cache('UniversalSubs.Cache.Provider.' + self.name)  # dummy cache
+            self.__http_client = HttpClient()
+        elif settings.cache_whole_requests:
             self.__cache = Cache('UniversalSubs.Cache.Provider.' + self.name)  # dummy cache
             self.__http_client = HttpClient(cache=cache)
         else:

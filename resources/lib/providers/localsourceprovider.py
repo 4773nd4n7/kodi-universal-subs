@@ -21,7 +21,7 @@ from resources.lib.utils.text import normalize_text
 class LocalSourceProvider(SourceProvider):
 
     def __init__(self, settings: Settings):
-        super().__init__(settings, MappedLanguages([]))
+        super().__init__(settings, MappedLanguages([]), disable_cache=True)
 
     @property
     def name(self) -> str:

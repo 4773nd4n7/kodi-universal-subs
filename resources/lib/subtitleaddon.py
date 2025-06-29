@@ -85,8 +85,8 @@ class SubtitleAddon:
         xbmcvfs.mkdirs(self._settings.addon_user_path.as_posix())
         dirs, _ = xbmcvfs.listdir(self._settings.addon_user_path.as_posix())
         for dir_name in dirs[:10]:
+            dir_path = self._settings.addon_user_path.joinpath(dir_name)
             try:
-                dir_path = self._settings.addon_user_path.joinpath(dir_name)
                 self._logger.info("Removing user temporary directory %s", dir_path)
                 shutil.rmtree(dir_path, ignore_errors=True)
             except Exception:

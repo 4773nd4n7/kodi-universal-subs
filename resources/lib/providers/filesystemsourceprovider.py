@@ -19,7 +19,7 @@ from resources.lib.utils.text import normalize_text
 class FileSystemSourceProvider(SourceProvider):
 
     def __init__(self, settings: Settings):
-        super().__init__(settings, MappedLanguages([]))
+        super().__init__(settings, MappedLanguages([]), disable_cache=True)
         self.root_path = settings.file_system_provider_path
 
     @property
@@ -32,6 +32,8 @@ class FileSystemSourceProvider(SourceProvider):
 
     def _fetch_search_results(self, request: SearchRequest, request_internal_languages: List[Language]) -> List[SearchResult]:
         results: List[SearchResult] = []
+        if not request.is_file:
+            return results
         normalized_search_term = normalize_text(self._build_search_term(request))
         if not normalized_search_term:
             return results
