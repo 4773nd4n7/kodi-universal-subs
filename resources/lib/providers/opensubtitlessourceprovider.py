@@ -297,7 +297,8 @@ class OpenSubtitlesSourceProvider(SourceProvider):
         return results
 
     def _get(self, request: GetRequest) -> List[GetResult]:
-        http_request = HttpRequest(request.search_result_id)
+        http_request = HttpRequest(request.search_result_id.replace("/en/subtitleserve", "/en/download"))
+        http_request.headers["Accept-Encoding"] = "gzip, deflate, br, zstd"
         http_response = self._http_client.exchange(http_request)
         results = self._process_get_subtitles_data(http_response.file_name, http_response.data)
         return results

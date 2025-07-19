@@ -234,11 +234,14 @@ class SubsceneSourceProvider(SourceProvider):
 
     def __init__(self, settings: Settings):
         super().__init__(settings, MappedLanguages(SUPPORTED_LANGUAGES, LANGUAGE_MAPPINGS))
-        self._http_client.base_url = "https://subscene.com"
-        self._http_client.default_headers["Host"] = "subscene.com"
-        self._http_client.default_headers["Referer"] = "https://subscene.com"
+        self._http_client.base_url = "https://sub-scene.com"
+        self._http_client.default_headers["Host"] = "sub-scene.com"
+        self._http_client.default_headers["Referer"] = "https://sub-scene.com"
         self._http_client.default_headers["Accept"] = "text/html,application/xhtml+xml,application/xml"
         self._http_client.default_headers["Accept-Language"] = "en-US,en"
+        self._http_client.default_headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+        # TODO/REVIEW: unlikely this cookie value will be long lived...
+        self._http_client.default_headers["Cookie"] = "cf_clearance=K53ua2tWRdnlPqKCc8NwjXCVBb6F6nCO.S86iR0ao2E-1752903947-1.2.1.1-Ay9AMviVOLJJrNmoHhWA.OIW9FVJuFsveBZmJZ8klyIIqTjtQERuGdwieNXH4_.qOCMAx4uMVgoVbJgwbRO5Kq5_57hmBMx5Uu09HfDu.n7zPZG4oswIP9_kY7hLpY3SAMieYVddOlwXLZeweOdA.el_hLmAtD7bhZmJsRhD.oc7zQkNiaRnkxAg3zc7aVYqugdeu0FK8gY1D8d7UPJ2.i1WogLljklZMp5.q_fhqtU; PHPSESSID=8ree50u0dl1bdtjii4qfnndd12"
         self._http_client.force_https = True
 
     @property
@@ -263,8 +266,8 @@ class SubsceneSourceProvider(SourceProvider):
             return "%s%s" % (request.title, " (%s)" % request.year if include_year and request.year else "")
 
     def __fetch_search_title_urls(self, request: SearchRequest) -> List[Tuple[str, str]]:
-        http_request = HttpRequest("/subtitles/searchbytitle")
-        http_request.set_urlencoded_form_data({"query": self._build_search_term(request), "l": ""})
+        http_request = HttpRequest("/search")
+        http_request.add_url_query_params({"query": self._build_search_term(request)})
         http_response = self._http_client.exchange(http_request)
         titles: List[Tuple[str, str]] = []
         result_anchor_tags = http_response.get_data_as_html().select("div.search-result > ul > li > div.title > a")
@@ -351,10 +354,7 @@ class SubsceneSourceProvider(SourceProvider):
 
     def _get(self, request: GetRequest) -> List[GetResult]:
         search_result_id_parts = request.search_result_id.split("|", 2)
-        http_request = HttpRequest(search_result_id_parts[2])
-        http_response = self._http_client.exchange(http_request)
-        download_url = http_response.get_data_as_html().select_one("a#downloadButton").attrs["href"]
-        http_request = HttpRequest(download_url)
+        http_request = HttpRequest(search_result_id_parts[2].replace("/subtitle/", "/download/"))
         http_response = self._http_client.exchange(http_request)
         results = self._process_get_subtitles_data(http_response.file_name, http_response.data)
         if search_result_id_parts[0] or search_result_id_parts[1] and len(results) > 1:
