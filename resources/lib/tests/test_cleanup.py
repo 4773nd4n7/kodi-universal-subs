@@ -1,17 +1,7 @@
 #!/usr/bin/python
 
-import sys
 import textwrap
 import unittest
-from pathlib import Path
-
-if __name__ == '__main__' and not __package__:
-    __package__ = 'resources.lib.tests'
-    sys.path.append(str(Path(__file__).resolve().parents[len(__package__.split("."))]))
-    try:
-        sys.path.remove(str(Path(__file__).resolve().parent))
-    except ValueError:
-        pass
 
 from ..providers.cleanupdecoratorprovider import CleanupDecoratorProvider
 

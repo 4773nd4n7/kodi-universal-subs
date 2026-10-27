@@ -190,6 +190,11 @@ class HttpResponse:
         self._data: bytes = None
         self._data_reader = data_reader
         self._headers = headers
+        # Header field names are case-insensitive (RFC 9110), but servers do send 'location' as well
+        # as 'Location'; index the values by lower-case name so lookups do not depend on the casing.
+        self._header_values_by_lower_name: Dict[str, List[str]] = {}
+        for header_name, header_values in headers.items():
+            self._header_values_by_lower_name.setdefault(header_name.lower(), []).extend(header_values)
         self._final_request_url = final_request_url or request.url
 
     @property
@@ -233,13 +238,13 @@ class HttpResponse:
         return self._headers.keys()
 
     def get_header_value(self, header_name: str, throw_if_many=False) -> str:
-        header_values = self._headers.get(header_name, [])
+        header_values = self.get_header_values(header_name)
         if throw_if_many and len(header_values) > 1:
             raise Exception("Read single value for header %s where many exists." % header_name)
         return header_values[0] if header_values else None
 
     def get_header_values(self, header_name: str) -> List[str]:
-        return self._headers.get(header_name, [])
+        return self._header_values_by_lower_name.get(header_name.lower(), [])
 
     @property
     def data(self) -> bytes:

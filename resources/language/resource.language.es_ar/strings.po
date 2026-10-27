@@ -100,3 +100,11 @@ msgstr "URL de actualización de reglas"
 msgctxt "#60004"
 msgid "Update rules interval in days"
 msgstr "Intervalo en días para actualización de reglas"
+
+msgctxt "#40007"
+msgid "SubDivX browser session"
+msgstr "Sesión del navegador para SubDivX"
+
+msgctxt "#400071"
+msgid "Cloudflare protects SubDivX from clients that are not browsers. With Kodi running, open http://127.0.0.1:39517/ in a browser on this same computer: that page shows the script to run on subdivx.com and copies it for you. Alternatively paste the captured text here. The value expires; repeat when SubDivX stops returning results."
+msgstr "Cloudflare protege SubDivX de los clientes que no son navegadores. Con Kodi abierto, abrí http://127.0.0.1:39517/ en un navegador en esta misma computadora: esa página muestra el script para ejecutar en subdivx.com y lo copia por vos. También podés pegar acá el texto capturado. El valor caduca; repetí el proceso cuando SubDivX deje de devolver resultados."

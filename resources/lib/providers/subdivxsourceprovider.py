@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import base64
+import json
 import re
 from typing import Any, Dict, List
 
@@ -17,6 +19,31 @@ from resources.lib.utils.text import unescape_html
 
 STAR_HTML = '<i class="fa fa-star rating-color">'
 
+
+def parse_browser_session(raw: str) -> Dict[str, str]:
+    """Decode the blob that ``resources/subdivx-session.js`` copies to the clipboard.
+
+    The blob is base64-encoded JSON with the browser's ``cookie`` header value and its ``ua``:
+    Cloudflare binds ``cf_clearance`` to that user agent, so both have to travel together.
+    Empty, truncated or unrecognised input yields an empty mapping, which keeps the anonymous
+    request path.
+    """
+    value = (raw or "").strip()
+    if not value:
+        return {}
+    try:
+        decoded = base64.b64decode(value + "=" * (-len(value) % 4)).decode("utf-8")
+        data = json.loads(decoded)
+    except (ValueError, UnicodeDecodeError):
+        return {}
+    if not isinstance(data, dict) or not isinstance(data.get("cookie"), str) or not data["cookie"]:
+        return {}
+    session = {"cookie": data["cookie"]}
+    if isinstance(data.get("ua"), str) and data["ua"]:
+        session["ua"] = data["ua"]
+    return session
+
+
 RE_FORCED_SUBTITLE_FILE_NAME = re.compile(r"\b(forced|forzado)\b", re.IGNORECASE)
 
 
@@ -26,6 +53,12 @@ class SubDivXSourceProvider(SourceProvider):
         super().__init__(settings, MappedLanguages([Language.spanish]))
         self._http_client.base_url = "https://www.subdivx.com/"
         self._http_client.default_headers["Referer"] = "https://www.subdivx.com/index.php"
+        browser_session = parse_browser_session(settings.subdivx_session)
+        if browser_session:
+            self._http_client.default_headers["Cookie"] = browser_session["cookie"]
+            if browser_session.get("ua"):
+                # cf_clearance is bound to the user agent that obtained it.
+                self._http_client.default_headers["User-Agent"] = browser_session["ua"]
 
     @property
     def name(self) -> str:

@@ -128,6 +128,7 @@ class SourceProvider(Provider):
 
     def search(self, request: SearchRequest) -> List[SearchResult]:
         self._logger.info("Searching with request:\n%s" % to_yaml(request))
+        self.last_error = None
         request_internal_languages = self.__resolve_search_request_internal_languages(request)
         if request_internal_languages is None:
             self._logger.info("No supported requested languages found, skipping search request")
@@ -136,17 +137,25 @@ class SourceProvider(Provider):
             self._logger.info("Resolved request internal languages:\n%s" % to_yaml(request_internal_languages))
         results: List[SearchResult] = []
         cache_key = "search:%s" % to_json(request)
-        results = self.__cache.get_or_initialize(
-            cache_key,
-            lambda: self._fetch_search_results(request, request_internal_languages))
+        self.last_error = None
+        try:
+            results = self.__cache.get_or_initialize(
+                cache_key,
+                lambda: self._fetch_search_results(request, request_internal_languages))
+        except Exception as error:
+            # Remembered so the caller can tell a blocked site from an empty result set.
+            self.last_error = error
+            raise
         request_file_name = request.get_file_name(False)
         for result in results:
             result.provider_name = self.name
             # providers set the language property using the internal languages, we map that to external/standard languages
             result.language = self._supported_languages.to_external_first(result.language)
             self.__update_release_info(result)
-            if self._overrides_is_sync_from_description_and_filename:
-                result.is_sync = result.release_info and re.search(
+            if self._overrides_is_sync_from_description_and_filename and result.release_info:
+                # Without a release name there is nothing to match the file name against, so the
+                # provider's own knowledge survives (e.g. sidecar subtitles are always in sync).
+                result.is_sync = re.search(
                     re.escape(request_file_name), result.release_info, re.I) is not None
         if self._overrides_ratings_from_downloads:
             max_downloads = max(0, float(max([sr.downloads for sr in results], default=0)))

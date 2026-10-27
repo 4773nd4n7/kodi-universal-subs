@@ -240,8 +240,6 @@ class SubsceneSourceProvider(SourceProvider):
         self._http_client.default_headers["Accept"] = "text/html,application/xhtml+xml,application/xml"
         self._http_client.default_headers["Accept-Language"] = "en-US,en"
         self._http_client.default_headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
-        # TODO/REVIEW: unlikely this cookie value will be long lived...
-        self._http_client.default_headers["Cookie"] = "cf_clearance=K53ua2tWRdnlPqKCc8NwjXCVBb6F6nCO.S86iR0ao2E-1752903947-1.2.1.1-Ay9AMviVOLJJrNmoHhWA.OIW9FVJuFsveBZmJZ8klyIIqTjtQERuGdwieNXH4_.qOCMAx4uMVgoVbJgwbRO5Kq5_57hmBMx5Uu09HfDu.n7zPZG4oswIP9_kY7hLpY3SAMieYVddOlwXLZeweOdA.el_hLmAtD7bhZmJsRhD.oc7zQkNiaRnkxAg3zc7aVYqugdeu0FK8gY1D8d7UPJ2.i1WogLljklZMp5.q_fhqtU; PHPSESSID=8ree50u0dl1bdtjii4qfnndd12"
         self._http_client.force_https = True
 
     @property
@@ -266,7 +264,9 @@ class SubsceneSourceProvider(SourceProvider):
             return "%s%s" % (request.title, " (%s)" % request.year if include_year and request.year else "")
 
     def __fetch_search_title_urls(self, request: SearchRequest) -> List[Tuple[str, str]]:
-        http_request = HttpRequest("/search")
+        # The site's Cloudflare rule challenges ``GET /search?...`` but leaves ``GET /search/?...``
+        # alone; both paths reach the same handler, so search through the trailing-slash form.
+        http_request = HttpRequest("/search/")
         http_request.add_url_query_params({"query": self._build_search_term(request)})
         http_response = self._http_client.exchange(http_request)
         titles: List[Tuple[str, str]] = []
@@ -329,9 +329,13 @@ class SubsceneSourceProvider(SourceProvider):
                 continue
             result.is_hearing_impaired = result_tr_tag.select_one("td.a41") is not None
             result.author = result_tr_tag.select_one('a[href^="/u/"]').get_text(strip=True)
-            result.rating = 10 \
-                if download_anchor.select_one(".positive-icon") \
-                else 5 if download_anchor.select_one(".neutral-icon") else 0
+            # SearchResult.rating is documented as 0.0-5.0; the site only distinguishes three states.
+            if download_anchor.select_one(".positive-icon"):
+                result.rating = 5.0
+            elif download_anchor.select_one(".neutral-icon"):
+                result.rating = 2.5
+            else:
+                result.rating = 0.0
             results.append(result)
         return results
 

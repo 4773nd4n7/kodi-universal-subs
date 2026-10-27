@@ -177,7 +177,13 @@ class Addic7edSourceProvider(SourceProvider):
                     result_tbody.select_one("td.language").get_text(strip=True))
                 if not result.language in request_internal_languages:
                     continue
-                result.id = result_tbody.select_one('a.buttonDownload[href^="/original/"]').attrs["href"]
+                # Addic7ed dropped the ``buttonDownload`` class in its redesign (the link is now
+                # ``a.face-button``), so match the download link by its target instead.
+                download_anchor = result_tbody.select_one('a[href^="/original/"]')
+                if download_anchor is None:
+                    # A listed language can lack a download link; skip it instead of failing the search.
+                    continue
+                result.id = download_anchor.attrs["href"]
                 result.title = title_name
                 result.release_info = result_img.parent.get_text(strip=True)
                 result.release_info = re.sub(

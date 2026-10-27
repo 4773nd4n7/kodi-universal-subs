@@ -1,3 +1,6 @@
 __pycache__
+.dsh
+.venv
+.vscode
 /resources/examples/*.es.*
 /scripts

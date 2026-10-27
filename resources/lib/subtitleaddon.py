@@ -10,6 +10,7 @@ import tempfile
 from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List
+from urllib.error import HTTPError
 from urllib.parse import parse_qs, unquote, urlencode
 
 import xbmc
@@ -42,6 +43,7 @@ class SubtitleAddon:
         self._settings.addon_id = kodi_addon.getAddonInfo("id")
         self._settings.addon_path = Path(xbmcvfs.translatePath(kodi_addon.getAddonInfo("path")))
         self._settings.addon_user_path = Path(xbmcvfs.translatePath(kodi_addon.getAddonInfo("profile")))
+        self._subdivx_hint_shown = False
 
         kodi_addon_settings = kodi_addon.getSettings()
         self._settings.include_author_on_results = kodi_addon_settings.getBool("include_author_on_results")
@@ -53,6 +55,7 @@ class SubtitleAddon:
         self._settings.file_system_provider_path = Path(kodi_addon_settings.getString("file_system_provider_path"))
         self._settings.cache_whole_requests = kodi_addon_settings.getBool("cache_whole_requests")
         self._settings.exclude_splitted_subtitles = kodi_addon_settings.getBool("exclude_splitted_subtitles")
+        self._settings.subdivx_session = kodi_addon_settings.getString("subdivx_session")
         if not self._settings.file_system_provider_path.exists() and "FileSystem" in self._settings.providers:
             self._settings.providers.remove("FileSystem")
         self._settings.translators = kodi_addon_settings.getStringList("translators")
@@ -154,6 +157,7 @@ class SubtitleAddon:
         request = self.__parse_search_request(parsed_args)
         provider = ProvidersRegistry.build_from_settings(self._settings)
         results = provider.search(request)
+        self.__maybe_hint_subdivx_capture(provider)
         for result in results:
             list_item_text = result.title + " | " + result.release_info if result.release_info else result.title
             list_item = xbmcgui.ListItem(label=result.language.name, label2=list_item_text)
@@ -170,6 +174,22 @@ class SubtitleAddon:
                 listitem=list_item,
                 isFolder=False)
         xbmcplugin.endOfDirectory(kodi_dir_handle)
+
+    def __maybe_hint_subdivx_capture(self, provider) -> None:
+        """Point at the capture page when SubDivX is stopped by Cloudflare, once per run."""
+        if self._settings.subdivx_session or self._subdivx_hint_shown:
+            return
+        for source in getattr(provider, "sources", [provider]):
+            error = getattr(source, "last_error", None)
+            if source.name != "SubDivX" or not isinstance(error, HTTPError):
+                continue
+            if (error.headers or {}).get("Cf-Mitigated") != "challenge":
+                continue
+            self._subdivx_hint_shown = True
+            xbmc.executebuiltin(
+                'Notification("Universal Subs","SubDivX is blocked by Cloudflare. Open '
+                'http://127.0.0.1:39517/ in a browser to capture a session.",15000)')
+            return
 
     def __handle_download(self, kodi_dir_handle: int, parsed_args: Dict[str, str]) -> None:
         self.__setup_user_data_directory()

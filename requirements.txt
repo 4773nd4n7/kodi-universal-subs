@@ -1,0 +1,30 @@
+# Python dependencies for running this add-on outside Kodi: the test suite, local debugging and
+# IDE assistance.
+#
+# Kodi never reads this file. At runtime the add-on receives these libraries from Kodi's own
+# Python and from the module add-ons declared in addon.xml (<requires>), so the two files have to
+# be kept in sync:
+#
+#   package here        addon.xml import
+#   ------------------  -----------------------------------
+#   beautifulsoup4      script.module.beautifulsoup4
+#   cachetools          script.module.cachetools
+#   chardet             script.module.chardet
+#   html5lib            script.module.html5lib
+#   PyYAML              script.module.yaml
+#   Unidecode           script.module.unidecode
+#   typing_extensions   script.module.typing_extensions  (declared, not imported directly)
+#
+# Kodi also supplies two binary add-ons that cannot be installed with pip: vfs.libarchive and
+# vfs.rar (used to unpack RAR/7Z subtitle archives through xbmcvfs).
+#
+# The version ranges below stay installable on Python 3.11, the interpreter shipped with both
+# Kodi 20 Nexus and Kodi 21 Omega (xbmc.python 3.0.1), which is the minimum declared in addon.xml.
+
+beautifulsoup4>=4.9,<5
+cachetools>=4.2,<6
+chardet>=4.0,<6
+html5lib>=1.1,<2
+PyYAML>=5.4,<7
+Unidecode>=1.3,<2
+typing_extensions>=4.6,<5

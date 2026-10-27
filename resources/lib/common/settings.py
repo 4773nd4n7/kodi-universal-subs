@@ -31,6 +31,7 @@ class Settings:
     translation_cache_ttl: timedelta = timedelta(days=30)
     cache_whole_requests: bool = False
     exclude_splitted_subtitles = True
+    subdivx_session: str = ""
 
     clean_up_subtitles = True
     clean_up_ads = True

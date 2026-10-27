@@ -128,3 +128,11 @@ msgstr ""
 msgctxt "#60004"
 msgid "Update rules interval in days"
 msgstr ""
+
+msgctxt "#40007"
+msgid "SubDivX browser session"
+msgstr "SubDivX browser session"
+
+msgctxt "#400071"
+msgid "Cloudflare protects SubDivX from clients that are not browsers. With Kodi running, open http://127.0.0.1:39517/ in a browser on this same computer: that page shows the script to run on subdivx.com and copies it for you. Alternatively paste the captured text here. The value expires; repeat when SubDivX stops returning results."
+msgstr ""
