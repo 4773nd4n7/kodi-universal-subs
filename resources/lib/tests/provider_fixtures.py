@@ -9,7 +9,7 @@ them first.
 
 from pathlib import Path
 
-from resources.lib.providers.searchresult import SearchResult
+from resources.lib.providers.search_result import SearchResult
 
 MOVIE_TITLE = "The Matrix"
 MOVIE_YEAR = 1999

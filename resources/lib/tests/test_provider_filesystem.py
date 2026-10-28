@@ -3,9 +3,9 @@
 """Tests for the ``FileSystem`` provider: subtitles anywhere below a configured library folder.
 
 The provider is driven through the same ``search`` and ``get`` operations as the remote providers,
-against a temporary library instead of a provider site, so these tests are hermetic and always run.
+against a temporary library instead of a provider site, so these tests are offline and always run.
 
-Run it from the repository root, without installing the add-on into Kodi:
+Run it from the repository root, without installing the add-on into Kodi::
 
     python -m resources.lib.tests.test_provider_filesystem -v
 """

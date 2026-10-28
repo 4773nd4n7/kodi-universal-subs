@@ -6,14 +6,14 @@ The redirect handling of several providers reads the ``Location`` header, and se
 send it in any casing (OpenSubtitles sends ``location``), so the lookup rules are covered here
 without touching the network.
 
-Run it from the repository root, without installing the add-on into Kodi:
+Run it from the repository root, without installing the add-on into Kodi::
 
     python -m resources.lib.tests.test_httpclient -v
 """
 
 import unittest
 
-from resources.lib.utils.httpclient import HttpRequest, HttpResponse
+from resources.lib.utils.http_client import HttpRequest, HttpResponse
 
 
 def build_response(headers, status_code=200, final_request_url=None) -> HttpResponse:

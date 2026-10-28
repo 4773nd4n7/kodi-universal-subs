@@ -32,6 +32,7 @@ class Settings:
     cache_whole_requests: bool = False
     exclude_splitted_subtitles = True
     subdivx_session: str = ""
+    subdl_api_key: str = ""
 
     clean_up_subtitles = True
     clean_up_ads = True

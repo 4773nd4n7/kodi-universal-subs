@@ -7,7 +7,7 @@ without touching the network: a provider that cannot serve a request is skipped,
 provider removed from the add-on but still stored in the user's Kodi settings) are ignored instead
 of breaking every search, and the composition built from the settings matches the configuration.
 
-Run it from the repository root, without installing the add-on into Kodi:
+Run it from the repository root, without installing the add-on into Kodi::
 
     python -m resources.lib.tests.test_provider_registry -v
 """
@@ -15,9 +15,9 @@ Run it from the repository root, without installing the add-on into Kodi:
 import unittest
 
 from resources.lib.common.language import Language
-from resources.lib.providers.compositeprovider import CompositeProvider
-from resources.lib.providers.localsourceprovider import LocalSourceProvider
-from resources.lib.providers.providersregistry import ProvidersRegistry
+from resources.lib.providers.composite_provider import CompositeProvider
+from resources.lib.providers.local_source_provider import LocalSourceProvider
+from resources.lib.providers.providers_registry import ProvidersRegistry
 
 from .provider_fixtures import MOVIE_TITLE, MOVIE_YEAR
 from .provider_testcase import ProviderTestCase, build_settings
@@ -28,6 +28,7 @@ EXPECTED_PROVIDER_NAMES = [
     "Local",
     "OpenSubtitles",
     "SubDivX",
+    "SubDL",
     "Subscene",
 ]
 
@@ -86,6 +87,14 @@ class ProviderRegistryTest(ProviderTestCase):
         provider = ProvidersRegistry.build_from_settings(settings)
         self.assertIsInstance(provider, CompositeProvider)
         self.assertEqual([], provider.search(self.build_movie_search_request(MOVIE_TITLE, MOVIE_YEAR, [])))
+
+    def test_build_from_settings_ignores_a_removed_translator(self) -> None:
+        # "Libre" was removed; a stale settings value naming it must not wrap the provider in a
+        # translation layer that has nothing to translate with.
+        settings = build_settings(self.work_directory.joinpath("stale-translator"))
+        settings.providers = ["Local"]
+        settings.translators = ["Libre"]
+        self.assertIsInstance(ProvidersRegistry.build_from_settings(settings), LocalSourceProvider)
 
 
 if __name__ == '__main__':

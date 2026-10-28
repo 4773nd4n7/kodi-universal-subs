@@ -50,7 +50,7 @@ def init_logging_from_yaml(config_path: Path) -> None:
 
 try:
     import xbmc
-    from xbmc import LOGDEBUG, LOGERROR, LOGFATAL, LOGINFO, LOGNONE, LOGWARNING
+    from xbmc import LOGERROR, LOGFATAL, LOGINFO, LOGWARNING
 
     class KodiLogHandler(logging.Handler):
 

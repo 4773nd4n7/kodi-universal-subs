@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Hermetic tests for the loopback receiver that captures the SubDivX browser session."""
+"""Offline tests for the loopback receiver that captures the SubDivX browser session."""
 
 import json
 import unittest

@@ -1,0 +1,63 @@
+[project]
+name = "service.subtitles.universalsubs"
+# The single source of truth for the version. addon.xml keeps the @VERSION@ placeholder and the
+# packaging/install tasks substitute this value into the copy they produce, so builds never
+# rewrite a tracked file.
+version = "1.0.4"
+description = "Universal Subs: a Kodi subtitle service with multiple providers"
+readme = "README.md"
+# Kodi 20/21 ship Python 3.11 and nothing else, so uv selects 3.11 for the environment from here
+# alone; there is no separate .python-version file to keep in step.
+requires-python = ">=3.11,<3.12"
+license = "MIT"
+dependencies = [
+    "beautifulsoup4>=4.9,<5",
+    "cachetools>=4.2,<6",
+    "chardet>=4.0,<6",
+    "html5lib>=1.1,<2",
+    "PyYAML>=5.4,<7",
+    "Unidecode>=1.3,<2",
+    "typing_extensions>=4.6,<5",
+]
+
+# Development-only tools. The add-on itself never imports them; Kodi supplies its own
+# copies of the libraries above through the script.module.* imports in addon.xml.
+[dependency-groups]
+dev = [
+    "poethepoet>=0.30",
+    "pytest>=9.2.0",
+    "ruff>=0.6",
+]
+
+[tool.uv]
+# Not a distributable: no wheel is built and nothing is installed into the environment.
+# The version stays in addon.xml, which is what Kodi reads.
+package = false
+
+[tool.poe.tasks]
+test = "pytest"
+offline = { cmd = "pytest", env = { UNIVERSAL_SUBS_NETWORK_TESTS = "0" } }
+lint = "ruff check ."
+format = "ruff format ."
+package = "python scripts/addon_tasks.py package"
+install = "python scripts/addon_tasks.py install"
+
+[tool.pytest.ini_options]
+# The tests live in the add-on tree and import resources.lib.*, which only resolves when the
+# repository root is on sys.path.
+testpaths = ["resources/lib/tests"]
+pythonpath = ["."]
+# Import the modules under their real package name (resources.lib.tests.*) so their relative
+# imports work; resources/ and resources/lib/ are namespace packages, hence the second flag.
+# -v prints each test's id as it starts, so the console shows what is running rather than only
+# dots per module; -ra lists skip reasons and --tb=short keeps tracebacks readable.
+addopts = "-ra --tb=short --import-mode=importlib -v"
+consider_namespace_packages = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["resources/examples"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

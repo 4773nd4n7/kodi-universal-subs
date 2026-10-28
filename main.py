@@ -2,7 +2,7 @@
 
 import sys
 
-from resources.lib.subtitleaddon import SubtitleAddon
+from resources.lib.subtitle_addon import SubtitleAddon
 
 if __name__ == "__main__":
     addon = SubtitleAddon()

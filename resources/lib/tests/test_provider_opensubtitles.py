@@ -6,9 +6,9 @@ Covers the operations the addon performs for a user: a movie search with a year,
 with season and episode, and downloading the first result. The assertions live in
 ``OnlineSourceProviderTestCase``; this module only supplies the titles and languages.
 
-The tests reach the public internet, so they are skipped unless explicitly enabled::
+The tests reach the public internet; they run by default, and this switches them off::
 
-    $env:UNIVERSAL_SUBS_NETWORK_TESTS='1'
+    $env:UNIVERSAL_SUBS_NETWORK_TESTS='0'
     python -m resources.lib.tests.test_provider_opensubtitles -v
 
 See ``provider_testcase`` for the dependencies these tests need outside Kodi.

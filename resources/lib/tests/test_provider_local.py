@@ -3,10 +3,10 @@
 """Tests for the ``Local`` provider: subtitles stored next to the media file being played.
 
 The provider is driven through the same ``search`` and ``get`` operations as the remote providers,
-against a temporary directory instead of a provider site, so these tests are hermetic and always
+against a temporary directory instead of a provider site, so these tests are offline and always
 run.
 
-Run it from the repository root, without installing the add-on into Kodi:
+Run it from the repository root, without installing the add-on into Kodi::
 
     python -m resources.lib.tests.test_provider_local -v
 """
@@ -16,7 +16,7 @@ import zipfile
 from pathlib import Path
 
 from resources.lib.common.language import Language
-from resources.lib.providers.searchrequest import SearchRequest
+from resources.lib.providers.search_request import SearchRequest
 
 from .provider_fixtures import (ENGLISH_SUBTITLE_TEXT, MOVIE_TITLE, MOVIE_YEAR,
                                 SPANISH_SUBTITLE_TEXT, find_result_by_id,

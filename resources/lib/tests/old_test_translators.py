@@ -16,11 +16,9 @@ if __name__ == '__main__' and not __package__:
 
 from ..common.language import Language
 from ..common.settings import Settings
-from ..providers.getresult import GetResult
-from ..translation.bingtranslator import BingTranslator
-from ..translation.googletranslator import GoogleTranslator
-from ..translation.libretranslator import LibreTranslator
-from ..translation.subtitletranslator import SubtitleTranslator
+from ..providers.get_result import GetResult
+from ..translation.bing_translator import BingTranslator
+from ..translation.subtitle_translator import SubtitleTranslator
 from ..utils.compression import Compression
 from ..utils.logging import init_logging_from_yaml
 from ..utils.yaml import to_yaml
@@ -42,7 +40,6 @@ logger = logging.getLogger('UniversalSubs')
 logger.info("Settings: %s", to_yaml(settings))
 
 # translator = SubtitleTranslator(GoogleTranslator(settings))
-# translator = SubtitleTranslator(LibreTranslator(settings))
 translator = SubtitleTranslator(BingTranslator(settings))
 
 examples_path = settings.addon_path.joinpath("resources", "examples")

@@ -6,15 +6,15 @@ Two kinds of coverage live here because both belong to one provider:
 
 * ``SubsceneSourceProviderTest`` performs the live movie and TV show searches and downloads the
   first result, using the assertions of ``OnlineSourceProviderTestCase``. It reaches the public
-  internet, so it is skipped unless explicitly enabled.
+  internet and runs by default; ``UNIVERSAL_SUBS_NETWORK_TESTS=0`` skips it.
 * ``SubsceneResultParsingTest`` parses a recorded results table, which covers the mapping onto
   ``SearchResult`` (including the documented 0.0-5.0 rating range) without the network, so it
   always runs.
 
-Run the hermetic part on its own, or enable the live part (from the repository root)::
+Run it from the repository root; set the variable to keep a run offline::
 
     python -m resources.lib.tests.test_provider_subscene -v
-    $env:UNIVERSAL_SUBS_NETWORK_TESTS='1'
+    $env:UNIVERSAL_SUBS_NETWORK_TESTS='0'
 
 See ``provider_testcase`` for the dependencies these tests need outside Kodi.
 """
@@ -24,7 +24,7 @@ import unittest
 from bs4 import BeautifulSoup
 
 from resources.lib.common.language import Language
-from resources.lib.providers.searchrequest import SearchRequest
+from resources.lib.providers.search_request import SearchRequest
 
 # Imported as a module (not as a bare class name) so that the shared base test case, which is
 # abstract, is not collected by unittest discovery as a test case of its own.

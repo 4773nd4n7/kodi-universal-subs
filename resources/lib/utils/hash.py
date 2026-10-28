@@ -16,7 +16,7 @@ def _add_64bit_chksum(file: BufferedReader, base_file_hash: int) -> int:
     for _ in range(range_value):
         try:
             chunk = file.read(__byte_size)
-        except:
+        except Exception:
             chunk = file.read(__byte_size)
         (value,) = struct.unpack(__longlong_format_char, chunk)
         base_file_hash += value

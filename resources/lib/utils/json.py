@@ -14,7 +14,7 @@ class CustomObjectEncoder(JSONEncoder):
             return obj.total_seconds()
         try:
             return obj.__dict__
-        except:
+        except Exception:
             return {}
 
 
@@ -23,7 +23,7 @@ class JSONWithCommentsDecoder(JSONDecoder):
         super().__init__(**kw)
 
     def decode(self, s: str):
-        s = '\n'.join(l if not l.lstrip().startswith('//') else '' for l in s.split('\n'))
+        s = '\n'.join(line if not line.lstrip().startswith('//') else '' for line in s.split('\n'))
         return super().decode(s)
 
 

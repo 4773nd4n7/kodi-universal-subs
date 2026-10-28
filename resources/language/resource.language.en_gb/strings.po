@@ -136,3 +136,11 @@ msgstr "SubDivX browser session"
 msgctxt "#400071"
 msgid "Cloudflare protects SubDivX from clients that are not browsers. With Kodi running, open http://127.0.0.1:39517/ in a browser on this same computer: that page shows the script to run on subdivx.com and copies it for you. Alternatively paste the captured text here. The value expires; repeat when SubDivX stops returning results."
 msgstr ""
+
+msgctxt "#40008"
+msgid "SubDL API key"
+msgstr "SubDL API key"
+
+msgctxt "#400081"
+msgid "SubDL requires an API key. Sign in at https://subdl.com/panel/api to get a free one (2,000 requests a day); searches are skipped while this is empty."
+msgstr ""

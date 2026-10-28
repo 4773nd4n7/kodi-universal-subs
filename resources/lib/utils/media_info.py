@@ -56,7 +56,7 @@ class MediaInfo:
                 for file_track in file_tracks
             ]
             return streams_info
-        except Exception as e:
+        except Exception:
             MediaInfo._logger.error("Error parsing streams for \"%s\"" % file_path, exc_info=True)
             return []
 
@@ -83,7 +83,7 @@ class MediaInfo:
             with open(temp_subtitle_file_path, 'rb') as temp_subtitle_file:
                 temp_subtitle_file_content: bytes = temp_subtitle_file.read()
                 return [file_name, temp_subtitle_file_content]
-        except Exception as e:
+        except Exception:
             MediaInfo._logger.error("Error extracting subtitle stream %s for \"%s\"" %
                                     (stream_id, file_path), exc_info=True)
             return [None, None]

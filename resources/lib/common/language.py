@@ -20,7 +20,7 @@ def __normalize_map(map: Dict[str, str]) -> Dict[str, str]:
 
 def __populate_map_fallbacks(map: Dict[str, str], fallbacks_map: Dict[str, str], log_missing: bool = False) -> None:
     for key, fallback_value in fallbacks_map.items():
-        if not key in map:
+        if key not in map:
             if log_missing:
                 logger.fatal("Missing value for key " + key)
             map[key] = fallback_value
@@ -806,7 +806,7 @@ class Language:
     def from_standard_name(name: str) -> "Language":
         try:
             return Language(name)
-        except Exception as e:
+        except Exception:
             return None
 
     @staticmethod

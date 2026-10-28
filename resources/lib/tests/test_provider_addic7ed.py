@@ -8,7 +8,7 @@ search with a year and a TV show search with season and episode. The assertions 
 
 The tests reach the public internet, so they are skipped unless explicitly enabled::
 
-    $env:UNIVERSAL_SUBS_NETWORK_TESTS='1'
+    $env:UNIVERSAL_SUBS_NETWORK_TESTS='0'
     python -m resources.lib.tests.test_provider_addic7ed -v
 
 See ``provider_testcase`` for the dependencies these tests need outside Kodi.

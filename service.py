@@ -10,7 +10,7 @@ script posts the session here and this service stores it in the ``subdivx_sessio
 import xbmc
 import xbmcaddon
 
-from resources.lib.providers.subdivxsourceprovider import parse_browser_session
+from resources.lib.providers.subdivx_source_provider import parse_browser_session
 from resources.lib.utils.session_capture import DEFAULT_PORT, start_session_capture_server
 
 ADDON_ID = "service.subtitles.universalsubs"

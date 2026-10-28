@@ -108,3 +108,11 @@ msgstr "Sesión del navegador para SubDivX"
 msgctxt "#400071"
 msgid "Cloudflare protects SubDivX from clients that are not browsers. With Kodi running, open http://127.0.0.1:39517/ in a browser on this same computer: that page shows the script to run on subdivx.com and copies it for you. Alternatively paste the captured text here. The value expires; repeat when SubDivX stops returning results."
 msgstr "Cloudflare protege SubDivX de los clientes que no son navegadores. Con Kodi abierto, abrí http://127.0.0.1:39517/ en un navegador en esta misma computadora: esa página muestra el script para ejecutar en subdivx.com y lo copia por vos. También podés pegar acá el texto capturado. El valor caduca; repetí el proceso cuando SubDivX deje de devolver resultados."
+
+msgctxt "#40008"
+msgid "SubDL API key"
+msgstr "Clave de API de SubDL"
+
+msgctxt "#400081"
+msgid "SubDL requires an API key. Sign in at https://subdl.com/panel/api to get a free one (2,000 requests a day); searches are skipped while this is empty."
+msgstr "SubDL requiere una clave de API. Iniciá sesión en https://subdl.com/panel/api para obtener una gratuita (2.000 solicitudes por día); las búsquedas se omiten mientras esté vacía."

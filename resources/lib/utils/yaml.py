@@ -7,7 +7,7 @@ from typing import Any
 import yaml
 
 from resources.lib.common.language import Language
-from resources.lib.providers.getresult import GetResult
+from resources.lib.providers.get_result import GetResult
 
 
 def language_representer(dumper: yaml.SafeDumper, value: Language) -> yaml.nodes.MappingNode:

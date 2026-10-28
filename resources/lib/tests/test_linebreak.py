@@ -3,7 +3,7 @@
 import textwrap
 import unittest
 
-from ..providers.cleanupdecoratorprovider import CleanupDecoratorProvider
+from ..providers.cleanup_decorator_provider import CleanupDecoratorProvider
 
 
 class TestTextLineBreak(unittest.TestCase):

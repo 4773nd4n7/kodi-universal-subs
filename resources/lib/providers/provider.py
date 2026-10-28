@@ -4,10 +4,10 @@ import logging
 from abc import abstractmethod
 from typing import List
 
-from resources.lib.providers.getrequest import GetRequest
-from resources.lib.providers.getresult import GetResult
-from resources.lib.providers.searchrequest import SearchRequest
-from resources.lib.providers.searchresult import SearchResult
+from resources.lib.providers.get_request import GetRequest
+from resources.lib.providers.get_result import GetResult
+from resources.lib.providers.search_request import SearchRequest
+from resources.lib.providers.search_result import SearchResult
 
 
 class Provider:

@@ -10,7 +10,7 @@ The test cases rebuild what the addon does at runtime: create a ``Settings`` obj
   and ``test_provider_addic7ed.py`` - live searches against the real provider sites, gated behind
   the ``UNIVERSAL_SUBS_NETWORK_TESTS`` environment variable. They share the assertions of
   ``OnlineSourceProviderTestCase`` and only supply the titles and languages of their provider.
-* ``test_provider_local.py`` and ``test_provider_filesystem.py`` - hermetic tests for the providers
+* ``test_provider_local.py`` and ``test_provider_filesystem.py`` - offline tests for the providers
   that read from the local file system.
 * ``test_provider_registry.py`` - the contract every provider satisfies, and provider composition.
 * ``test_httpclient.py`` - the HTTP response helpers, notably case-insensitive header lookups.
@@ -24,9 +24,10 @@ Dependencies of this test suite (the addon expects Kodi to provide them at runti
     uv run --no-project --python 3.11 --with chardet --with unidecode --with beautifulsoup4 \
         --with html5lib --with cachetools --with pyyaml python -m resources.lib.tests.test_provider_local
 
-The live provider tests only run when they are explicitly enabled::
+The live provider tests run by default. They reach the real sites, so set
+``UNIVERSAL_SUBS_NETWORK_TESTS=0`` to skip them::
 
-    UNIVERSAL_SUBS_NETWORK_TESTS=1 uv run --no-project --python 3.11 \
+    UNIVERSAL_SUBS_NETWORK_TESTS=0 uv run --no-project --python 3.11 \
         --with chardet --with unidecode --with beautifulsoup4 --with html5lib \
         --with cachetools --with pyyaml python -m resources.lib.tests.test_provider_opensubtitles -v
 
@@ -46,11 +47,11 @@ from typing import Callable, List, Optional, Sequence, TypeVar
 
 from resources.lib.common.language import Language
 from resources.lib.common.settings import Settings
-from resources.lib.providers.getrequest import GetRequest
-from resources.lib.providers.getresult import GetResult
-from resources.lib.providers.providersregistry import ProvidersRegistry
-from resources.lib.providers.searchrequest import SearchRequest
-from resources.lib.providers.searchresult import SearchResult
+from resources.lib.providers.get_request import GetRequest
+from resources.lib.providers.get_result import GetResult
+from resources.lib.providers.providers_registry import ProvidersRegistry
+from resources.lib.providers.search_request import SearchRequest
+from resources.lib.providers.search_result import SearchResult
 from resources.lib.utils.compression import Compression
 from resources.lib.utils.text import bytes_to_string, normalize_text
 
@@ -74,14 +75,21 @@ T = TypeVar("T")
 
 
 def network_tests_enabled() -> bool:
-    """Whether the live provider tests were explicitly enabled by the caller."""
-    return os.environ.get(NETWORK_TESTS_ENVIRONMENT_VARIABLE, "").strip().lower() in ("1", "true", "yes", "on")
+    """Whether the live provider tests should run.
+
+    They run by default. Only an explicit false value (``0``, ``false``, ``no`` or ``off``) keeps
+    a run offline, so a machine that reaches the sites tests them without any setup.
+    """
+    configured = os.environ.get(NETWORK_TESTS_ENVIRONMENT_VARIABLE)
+    if configured is None:
+        return True
+    return configured.strip().lower() not in ("0", "false", "no", "off")
 
 
 requires_network = unittest.skipUnless(
     network_tests_enabled(),
-    "Live provider tests are disabled to keep the suite hermetic and offline; "
-    "set %s=1 to run them against the real provider sites." % NETWORK_TESTS_ENVIRONMENT_VARIABLE)
+    "Live provider tests are disabled by %s=0; unset it to run them against the real provider "
+    "sites." % NETWORK_TESTS_ENVIRONMENT_VARIABLE)
 
 
 def find_seven_zip_executable() -> Optional[Path]:

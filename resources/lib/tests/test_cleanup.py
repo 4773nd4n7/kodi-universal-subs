@@ -3,7 +3,7 @@
 import textwrap
 import unittest
 
-from ..providers.cleanupdecoratorprovider import CleanupDecoratorProvider
+from ..providers.cleanup_decorator_provider import CleanupDecoratorProvider
 
 
 class TestTextCleanup(unittest.TestCase):
@@ -89,7 +89,7 @@ class TestTextCleanup(unittest.TestCase):
         self.__test_custom_cleanup(source_text, expected_text)
 
     def test_custom_cleanup_with_redundant_chars_font_tag_2(self) -> None:
-        source_text = f"""
+        source_text = """
         T<font color="#ffff00">ext 1</font>
         """
         expected_text = """
@@ -120,7 +120,7 @@ class TestTextCleanup(unittest.TestCase):
         self.__test_custom_cleanup(source_text, expected_text)
 
     def test_remove_single_dialog_marker(self) -> None:
-        source_text = f"""
+        source_text = """
         <font color="white">- Text...</font>
         """
         expected_text = """
@@ -129,7 +129,7 @@ class TestTextCleanup(unittest.TestCase):
         self.__test_custom_cleanup(source_text, expected_text)
 
     def test_fix_dialog_marker_within_font_tag_1(self) -> None:
-        source_text = f"""
+        source_text = """
         Text 1. <font color="red">-Text 2</font>
         """
         expected_text = """
@@ -138,7 +138,7 @@ class TestTextCleanup(unittest.TestCase):
         self.__test_custom_cleanup(source_text, expected_text)
 
     def test_fix_dialog_marker_within_font_tag_2(self) -> None:
-        source_text = f"""
+        source_text = """
         <font color="green">Text 1.</font> <font color="red">-Text 2</font>
         """
         expected_text = """
@@ -147,7 +147,7 @@ class TestTextCleanup(unittest.TestCase):
         self.__test_custom_cleanup(source_text, expected_text)
 
     def test_fix_dialog_marker_within_font_tags_3(self) -> None:
-        source_text = f"""
+        source_text = """
         <font color="white">Text 1.</font> <font color="green">-Text 2.</font> <font color="red">-Text 3</font>
         """
         expected_text = """
@@ -156,7 +156,7 @@ class TestTextCleanup(unittest.TestCase):
         self.__test_custom_cleanup(source_text, expected_text)
 
     def test_fix_dialog_marker_within_font_tags_4(self) -> None:
-        source_text = f"""
+        source_text = """
         <font color="red">Text 1.</font>-Text 2.
         """
         expected_text = """
@@ -165,7 +165,7 @@ class TestTextCleanup(unittest.TestCase):
         self.__test_custom_cleanup(source_text, expected_text)
 
     def test_fix_dialog_marker_within_font_tags_5(self) -> None:
-        source_text = f"""
+        source_text = """
         <font color="red">- Text 1.</font><font color="green">- Text 2</font> <font color="green">Text 3.</font> <font color="red">- Text 4.</font> <font color="green">- Text 5.</font>
         """
         expected_text = """

@@ -7,7 +7,7 @@ from typing import Callable, TypeVar
 
 from cachetools import TTLCache
 
-from resources.lib.utils.persistentcache import PersistentCache
+from resources.lib.utils.persistent_cache import PersistentCache
 
 T = TypeVar('T')
 
@@ -25,6 +25,11 @@ class Cache:
                 ttl=cache_ttl.total_seconds())
         else:
             self._cache = None
+
+    @property
+    def is_enabled(self) -> bool:
+        """Whether a persistent cache is in use; ``set`` is a no-op when it is not."""
+        return self._cache is not None
 
     def get(self, key, default: T = None) -> T:
         if self._cache is None:

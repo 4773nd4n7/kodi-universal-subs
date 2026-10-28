@@ -8,10 +8,10 @@ from datetime import timedelta
 from typing import Any, Callable, List
 
 from resources.lib.common.language import Language
-from resources.lib.common.mappedlanguages import MappedLanguages
+from resources.lib.common.mapped_languages import MappedLanguages
 from resources.lib.common.settings import Settings
 from resources.lib.utils.cache import Cache
-from resources.lib.utils.httpclient import HttpClient
+from resources.lib.utils.http_client import HttpClient
 
 
 class UnsupportedTranslationException(Exception):
@@ -158,10 +158,12 @@ class Translator:
                     cache_key = pending_translations_keys.pop(0)
                     translations[translation_index] = translation
                     self._cache.set(cache_key, translation)
-                    try:
-                        assert translation == self._cache.get(cache_key, None)
-                    except Exception as e:
-                        self._logger.error(
-                            "Translation for line %s added to cache already but not present in it", cache_key)
-                        # raise e
+                    if self._cache.is_enabled:
+                        # Sanity check on the cache itself; meaningless when caching is disabled,
+                        # where set() is a no-op by design.
+                        try:
+                            assert translation == self._cache.get(cache_key, None)
+                        except Exception:
+                            self._logger.error(
+                                "Translation for line %s added to cache already but not present in it", cache_key)
         return translations

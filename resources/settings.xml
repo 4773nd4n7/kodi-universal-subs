@@ -7,13 +7,14 @@
       <group id="1">
         <setting id="providers" type="list[string]" label="30001" help="300011">
           <level>0</level>
-          <default>OpenSubtitles|Subscene|Addic7ed|SubDivX|Local|FileSystem</default>
+          <default>OpenSubtitles|Subscene|Addic7ed|SubDivX|SubDL|Local|FileSystem</default>
           <constraints>
             <options>
               <option label="OpenSubtitles.org | OS">OpenSubtitles</option>
               <option label="Subscene | SC">Subscene</option>
               <option label="Addic7ed.com | AD7">Addic7ed</option>
               <option label="SubDivX | SDX">SubDivX</option>
+              <option label="SubDL | SD">SubDL</option>
               <option label="Local | LO">Local</option>
               <option label="File System | FS">FileSystem</option>
             </options>
@@ -30,7 +31,6 @@
             <options>
               <option label="Google | GG">Google</option>
               <option label="Bing | BG">Bing</option>
-              <option label="Libre | LB">Libre</option>
             </options>
           </constraints>
           <control type="list" format="string">
@@ -686,6 +686,16 @@
           </constraints>
           <control type="edit" format="string">
             <heading>40007</heading>
+          </control>
+        </setting>
+        <setting id="subdl_api_key" type="string" label="40008" help="400081">
+          <level>2</level>
+          <default/>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <control type="edit" format="string">
+            <heading>40008</heading>
           </control>
         </setting>
       </group>

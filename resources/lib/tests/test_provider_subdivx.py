@@ -8,7 +8,7 @@ the site does not understand. The assertions live in ``OnlineSourceProviderTestC
 
 The tests reach the public internet, so they are skipped unless explicitly enabled::
 
-    $env:UNIVERSAL_SUBS_NETWORK_TESTS='1'
+    $env:UNIVERSAL_SUBS_NETWORK_TESTS='0'
     python -m resources.lib.tests.test_provider_subdivx -v
 
 See ``provider_testcase`` for the dependencies these tests need outside Kodi.
@@ -22,7 +22,7 @@ from pathlib import Path
 
 from resources.lib.common.language import Language
 from resources.lib.common.settings import Settings
-from resources.lib.providers.subdivxsourceprovider import (SubDivXSourceProvider,
+from resources.lib.providers.subdivx_source_provider import (SubDivXSourceProvider,
                                                             parse_browser_session)
 
 # Imported as a module (not as a bare class name) so that the shared base test case, which is
