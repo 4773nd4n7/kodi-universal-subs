@@ -7,14 +7,16 @@
       <group id="1">
         <setting id="providers" type="list[string]" label="30001" help="300011">
           <level>0</level>
-          <default>OpenSubtitles|Subscene|Addic7ed|SubDivX|SubDL|Local|FileSystem</default>
+          <default>OpenSubtitles|Subscene|Addic7ed|SubDivX|YTS Subs|Local|FileSystem</default>
           <constraints>
             <options>
               <option label="OpenSubtitles.org | OS">OpenSubtitles</option>
+              <option label="OpenSubtitles.com | OSC">OpenSubtitles.com</option>
               <option label="Subscene | SC">Subscene</option>
               <option label="Addic7ed.com | AD7">Addic7ed</option>
               <option label="SubDivX | SDX">SubDivX</option>
               <option label="SubDL | SD">SubDL</option>
+              <option label="YTS Subs | YTS">YTS Subs</option>
               <option label="Local | LO">Local</option>
               <option label="File System | FS">FileSystem</option>
             </options>
@@ -696,6 +698,36 @@
           </constraints>
           <control type="edit" format="string">
             <heading>40008</heading>
+          </control>
+        </setting>
+        <setting id="opensubtitles_com_api_key" type="string" label="40009" help="400091">
+          <level>2</level>
+          <default/>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <control type="edit" format="string">
+            <heading>40009</heading>
+          </control>
+        </setting>
+        <setting id="opensubtitles_com_username" type="string" label="40010" help="400101">
+          <level>2</level>
+          <default/>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <control type="edit" format="string">
+            <heading>40010</heading>
+          </control>
+        </setting>
+        <setting id="opensubtitles_com_password" type="string" label="40011" help="400111">
+          <level>2</level>
+          <default/>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <control type="edit" format="string">
+            <heading>40011</heading>
           </control>
         </setting>
       </group>

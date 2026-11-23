@@ -144,3 +144,27 @@ msgstr "SubDL API key"
 msgctxt "#400081"
 msgid "SubDL requires an API key. Sign in at https://subdl.com/panel/api to get a free one (2,000 requests a day); searches are skipped while this is empty."
 msgstr ""
+
+msgctxt "#40009"
+msgid "OpenSubtitles.com API key"
+msgstr "OpenSubtitles.com API key"
+
+msgctxt "#400091"
+msgid "Free API key from the developer page of your OpenSubtitles.com account. Required for searching this provider."
+msgstr ""
+
+msgctxt "#40010"
+msgid "OpenSubtitles.com username"
+msgstr "OpenSubtitles.com username"
+
+msgctxt "#400101"
+msgid "Your OpenSubtitles.com account username. Downloads need a login, because the API hands out file links only to authenticated users."
+msgstr ""
+
+msgctxt "#40011"
+msgid "OpenSubtitles.com password"
+msgstr "OpenSubtitles.com password"
+
+msgctxt "#400111"
+msgid "Password for that account, stored in Kodi's settings. Downloads consume the account's daily quota."
+msgstr ""

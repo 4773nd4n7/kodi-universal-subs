@@ -33,6 +33,9 @@ class Settings:
     exclude_splitted_subtitles = True
     subdivx_session: str = ""
     subdl_api_key: str = ""
+    opensubtitles_com_api_key: str = ""
+    opensubtitles_com_username: str = ""
+    opensubtitles_com_password: str = ""
 
     clean_up_subtitles = True
     clean_up_ads = True

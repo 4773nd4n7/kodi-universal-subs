@@ -27,6 +27,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 
 #: Development scaffolding, not addon content.
 EXCLUDED_DIRECTORIES = {
+    ".agents",
     ".git",
     ".github",
     ".dsh",
@@ -47,6 +48,7 @@ EXCLUDED_DIRECTORIES = {
 EXCLUDED_ROOT_NAMES = {
     ".editorconfig",
     ".gitignore",
+    "AGENTS.md",
     ".python-version",
     "noxfile.py",
     "pyproject.toml",

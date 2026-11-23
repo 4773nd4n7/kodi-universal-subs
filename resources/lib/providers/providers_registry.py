@@ -12,6 +12,8 @@ from resources.lib.providers.composite_provider import CompositeProvider
 from resources.lib.providers.filesystem_source_provider import \
     FileSystemSourceProvider
 from resources.lib.providers.local_source_provider import LocalSourceProvider
+from resources.lib.providers.opensubtitlescom_source_provider import \
+    OpenSubtitlesComSourceProvider
 from resources.lib.providers.opensubtitles_source_provider import \
     OpenSubtitlesSourceProvider
 from resources.lib.providers.provider import Provider
@@ -21,6 +23,7 @@ from resources.lib.providers.subscene_source_provider import \
     SubsceneSourceProvider
 from resources.lib.providers.translations_decorator_provider import \
     TranslationsDecoratorProvider
+from resources.lib.providers.yts_subs_source_provider import YtsSubsSourceProvider
 from resources.lib.translation.translators_registry import TranslatorsRegistry
 
 
@@ -35,7 +38,9 @@ class ProvidersRegistry:
                 SubsceneSourceProvider(settings),
                 SubDivXSourceProvider(settings),
                 SubDlSourceProvider(settings),
+                YtsSubsSourceProvider(settings),
                 OpenSubtitlesSourceProvider(settings),
+                OpenSubtitlesComSourceProvider(settings),
                 Addic7edSourceProvider(settings),
                 LocalSourceProvider(settings),
                 FileSystemSourceProvider(settings),

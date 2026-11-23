@@ -57,6 +57,9 @@ class SubtitleAddon:
         self._settings.exclude_splitted_subtitles = kodi_addon_settings.getBool("exclude_splitted_subtitles")
         self._settings.subdivx_session = kodi_addon_settings.getString("subdivx_session")
         self._settings.subdl_api_key = kodi_addon_settings.getString("subdl_api_key")
+        self._settings.opensubtitles_com_api_key = kodi_addon_settings.getString("opensubtitles_com_api_key")
+        self._settings.opensubtitles_com_username = kodi_addon_settings.getString("opensubtitles_com_username")
+        self._settings.opensubtitles_com_password = kodi_addon_settings.getString("opensubtitles_com_password")
         if not self._settings.file_system_provider_path.exists() and "FileSystem" in self._settings.providers:
             self._settings.providers.remove("FileSystem")
         self._settings.translators = kodi_addon_settings.getStringList("translators")

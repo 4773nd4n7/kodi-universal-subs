@@ -74,13 +74,14 @@ py -3.11 -m venv .venv
 .venv\Scripts\python -m pytest
 ```
 
-Each provider has its own module (`test_provider_opensubtitles.py`, `test_provider_subscene.py`,
-`test_provider_subdivx.py`, `test_provider_addic7ed.py`, `test_provider_subdl.py`,
-`test_provider_local.py`, `test_provider_filesystem.py`), plus `test_provider_registry.py` for the
-contract shared by all of them and `test_httpclient.py` for the HTTP helpers. Any module can be run
-on its own — either by node id, `pytest resources/lib/tests/test_provider_local.py`, or with
-`python -m`, since each module still has its `unittest.main()` block.
-
+Each provider has its own module (`test_provider_opensubtitles.py`, `test_provider_opensubtitlescom.py`,
+`test_provider_subscene.py`, `test_provider_subdivx.py`, `test_provider_addic7ed.py`,
+`test_provider_subdl.py`, `test_provider_yts_subs.py`, `test_provider_local.py`,
+`test_provider_filesystem.py`), plus
+`test_provider_registry.py` for the contract shared by all of them and `test_httpclient.py` for the
+HTTP helpers. Any module can be run on its own — either by node id,
+`pytest resources/lib/tests/test_provider_local.py`, or with `python -m`, since each module still
+has its `unittest.main()` block.
 
 The translators follow the same layout and are entirely offline: `test_translator.py` covers the
 behaviour every translator inherits, one module per implementation (`test_translator_bing.py`,
@@ -127,3 +128,17 @@ Keys are free from the [account panel](https://subdl.com/panel/api) and allow 2,
 day. Paste one into **Settings -> Advanced -> SubDL API key**; while it is empty the provider
 returns no results and the other providers are unaffected. The live test for this provider runs
 only when `SUBDL_API_KEY` is set in the environment.
+
+## OpenSubtitles.com
+
+`OpenSubtitles.com` is a separate provider from `OpenSubtitles`, which scrapes the older
+opensubtitles.org site. The .com service is API-only and needs three settings under
+**Settings -> Advanced**:
+
+- **OpenSubtitles.com API key** — free from the developer page of your OpenSubtitles.com account.
+- **OpenSubtitles.com username** and **password** — the account *username*. The API only returns
+  download links to authenticated users, and free accounts have a daily download quota, so the
+  add-on logs in once per session and reuses the token.
+
+Searching works with just the key; downloading needs the login. The live tests run only when
+`OPENSUBTITLES_COM_API_KEY`, `OPENSUBTITLES_COM_USERNAME` and `OPENSUBTITLES_COM_PASSWORD` are set.

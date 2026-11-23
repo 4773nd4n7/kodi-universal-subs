@@ -27,9 +27,11 @@ EXPECTED_PROVIDER_NAMES = [
     "FileSystem",
     "Local",
     "OpenSubtitles",
+    "OpenSubtitles.com",
     "SubDivX",
     "SubDL",
     "Subscene",
+    "YTS Subs",
 ]
 
 
