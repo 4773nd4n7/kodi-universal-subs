@@ -209,12 +209,12 @@ class SubDivXSourceProvider(SourceProvider):
         super().__init__(settings, MappedLanguages([Language.spanish]))
         self._http_client.base_url = "https://www.subdivx.com/"
         self._http_client.default_headers["Referer"] = "https://www.subdivx.com/index.php"
-        browser_session = parse_browser_session(settings.subdivx_session)
-        if browser_session:
-            self._http_client.default_headers["Cookie"] = browser_session["cookie"]
-            if browser_session.get("ua"):
+        self.__browser_session = parse_browser_session(settings.subdivx_session)
+        if self.__browser_session:
+            self._http_client.default_headers["Cookie"] = self.__browser_session["cookie"]
+            if self.__browser_session.get("ua"):
                 # cf_clearance is bound to the user agent that obtained it.
-                self._http_client.default_headers["User-Agent"] = browser_session["ua"]
+                self._http_client.default_headers["User-Agent"] = self.__browser_session["ua"]
         self.__csrf_token = ""
         self.__search_field = "buscar"
         self.__search_token = ""
@@ -227,6 +227,17 @@ class SubDivXSourceProvider(SourceProvider):
     @property
     def short_name(self) -> str:
         return "SDX"
+
+    def missing_credentials(self) -> str:
+        """SubDivX cannot reach the site without a clearance cookie.
+
+        Cloudflare challenges every client that is not a browser, so the session is required rather
+        than optional. Whether a *stored* one is still valid can only be learned by making a request;
+        that case is reported from the challenge response instead.
+        """
+        if not self.__browser_session:
+            return "SubDivX needs a browser session (Cloudflare blocks this client)"
+        return ""
 
     @property
     def _overrides_ratings_from_downloads(self) -> bool:

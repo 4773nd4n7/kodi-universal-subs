@@ -63,7 +63,20 @@ uv run poe install -- --kodi-user Kodi   # C:\Users\Kodi\AppData\Roaming\Kodi
 `--kodi-user` also accepts the `DOMAIN\name` form and rejects an account that has no profile
 directory. It and `--kodi-home` are mutually exclusive, and `KODI_HOME` still covers the portable
 case. Either way the install replaces the add-on folder wholesale and rewrites `addon.xml` with the
-real version; restart Kodi so it loads the new code.
+real version.
+
+A running Kodi is restarted after the copy, because the service and the settings schema are only read
+at startup. The install does not launch it itself — a process spawned from the shell would run as the
+caller, which is useless when Kodi owns the media centre's session. Instead it drops `restart.request`
+into the add-on's profile, and the running service does the restart: on Windows it starts a detached
+helper that waits for Kodi to exit and then launches it again, and only then quits, because Kodi's own
+`RestartApp` shuts down on Windows without starting back up. `uv run poe install -- --no-restart`
+skips the trigger altogether.
+
+When the service does not react — an older build, or no service running — the install reports it and
+exits non-zero, leaving Kodi as it was. Starting Kodi is deliberately out of scope: spawned from
+another account's shell it cannot reach the media centre's session, which is the whole reason the
+service performs the restart.
 
 The suite runs on [pytest](https://docs.pytest.org/), which discovers the `unittest`-style test
 cases as they are. `-v` is part of the configured `addopts`, so the console names each test as it
@@ -124,32 +137,53 @@ RAR/7Z downloads need 7-Zip; set `SEVEN_ZIP_PATH` if it is not installed in a st
 `resources/lib/tests/old_test_providers.py` and `old_test_translators.py` are manual scratch
 scripts, not tests: they run live searches with hardcoded media paths.
 
+## Web settings page
+
+Every setting the add-on declares can be edited from a browser instead of Kodi's settings dialog:
+
+- **Add-ons -> Universal Subs -> Configure -> Web settings page -> Open the settings page in a
+  browser**, or open **<http://127.0.0.1:39517/>** directly. The button runs `RunScript(<add-on id>)`
+  through the `xbmc.python.script` extension provided by `open_settings.py`: a subtitle module has no
+  plugin handler, so `RunPlugin` reaches nothing, and a bare file path runs without add-on context,
+  which breaks its imports.
+- The form is generated from `resources/settings.xml` on every request, so a setting added there
+  appears without any page code. Secrets (API keys, passwords, the SubDivX session) are write-only:
+  the page never renders a stored value, and leaving a field empty keeps it.
+- Saving writes straight into Kodi's settings, and only the fields you changed are submitted. The
+  next search uses the new values; no restart is needed.
+
+Three settings control the page itself, under **Settings -> Web settings page**:
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| Settings page port | `39517` | TCP port; raise it when the port is taken (applies on Kodi's next start) |
+| Settings page address | `127.0.0.1` | `0.0.0.0` listens on the LAN so other devices can reach it |
+| Allowed client addresses | empty | IPs or ranges such as `192.168.1.50` or `192.168.1.0/24`, allowed when listening beyond loopback |
+
+The page refuses a `Host` that is not an IP address or `localhost` (which defeats DNS rebinding) and
+an `Origin` that is not its own, so another website cannot post to it. On a device without a
+browser, the settings button shows the address to open elsewhere instead.
+
 ## SubDivX and Cloudflare
 
-`subdivx.com` sits behind a Cloudflare managed challenge, so the add-on cannot reach it with a
-plain HTTP client. The browser can, but the clearance cookie Cloudflare issues (`cf_clearance`) is
-marked `HttpOnly`, so no script running in the page can read it — the session has to be copied out
-of the request itself:
+`subdivx.com` sits behind a Cloudflare managed challenge, so the add-on cannot reach it with a plain
+HTTP client. The browser can, but the clearance cookie Cloudflare issues (`cf_clearance`) is marked
+`HttpOnly`, so no script running in the page can read it. It has to be copied out by hand, into the
+**SubDivX browser session** field of the [web settings page](#web-settings-page):
 
-1. With Kodi running, open **<http://127.0.0.1:39517/>**: that page carries the steps and a paste
-   box.
-2. On `subdivx.com`, press `F12`, switch to **Network**, reload the page, then select a request the
-   page made *after* it finished loading — the first document request can be the Cloudflare
-   challenge itself and carry no clearance cookie. Right-click it and choose
-   **Copy → Copy as cURL (bash)** (or *cmd*).
-3. Paste that into the page and press **Send to Kodi**. The add-on service stores it automatically
-   (it listens on `127.0.0.1:39517`); if Kodi cannot be reached, paste the same text into
-   **Settings → Advanced → SubDivX browser session**.
+1. On `subdivx.com`, press `F12`, open **Application -> Cookies -> https://www.subdivx.com**, select
+   `cf_clearance` and copy its **value**. The settings page attaches your browser's user agent
+   automatically, which Cloudflare needs next to the clearance.
+2. Paste that into **SubDivX browser session** and save. To capture the site login as well, copy a
+   whole request instead: in **Network**, pick a request made after the page loaded (the first one
+   can be the challenge itself), right-click it, **Copy -> Copy as cURL**, and paste that.
+3. The session is stored when you save. It expires, so repeat when SubDivX stops returning results.
+   Anyone holding it can act as that browser session, so do not share it.
 
-The whole request is copied, not just the cookie value, because Cloudflare binds `cf_clearance` to
-the user agent that obtained it: the add-on replays both. Pasting only the `cf_clearance` value is
-accepted, but it carries no user agent, so if a value-only paste keeps getting challenged, copy a
-whole request instead. If Kodi refuses the paste, the page names
-the reason — "no cookie header" usually means the challenge request was copied instead of a later
-one, while "no cf_clearance" means the clearance had not been issued yet. When SubDivX is blocked and
-no session is configured, Kodi shows a notification with that address. The session expires: repeat
-when SubDivX stops returning results. Anyone holding it can act as that browser session, so do not
-share it.
+If Kodi refuses the value, the form reports the reason per field: "no cookie header" usually means
+the challenge request was copied instead of a later one, while "no cf_clearance" means the clearance
+had not been issued yet. When SubDivX is blocked and no session is configured, Kodi shows a
+notification pointing at the settings page.
 
 ## SubDL
 

@@ -9,6 +9,7 @@ unpack. The key is a setting, so a user without one simply gets no results from 
 """
 
 from typing import Dict, List, Optional
+from urllib.parse import quote
 
 from resources.lib.common.language import Language, NAME_TO_TREE_LETTER_CODE, \
     NAME_TO_TWO_LETTER_CODE
@@ -42,6 +43,16 @@ LANGUAGE_BY_CODE: Dict[str, Language] = {
 }
 
 
+def download_url_from_api_url(url: str) -> str:
+    """The download path without the API key SubDL appends to it.
+
+    The API answers with ``/subtitle/<id>.zip?api_key=…``, but ``dl.subdl.com`` serves that path
+    without any credential. Keeping the query would put the key into the search result id, the Kodi
+    log, and the plugin URL Kodi calls, for no benefit.
+    """
+    return (url or "").split("?", 1)[0]
+
+
 class SubDlSourceProvider(SourceProvider):
 
     def __init__(self, settings: Settings) -> None:
@@ -54,6 +65,11 @@ class SubDlSourceProvider(SourceProvider):
     @property
     def short_name(self) -> str:
         return "SD"
+
+    def missing_credentials(self) -> str:
+        if not (self._settings.subdl_api_key or "").strip():
+            return "SubDL needs an API key"
+        return ""
 
     def __build_api_params(self, request: SearchRequest, request_internal_languages: List[Language]) -> Dict[str, object]:
         params: Dict[str, object] = {
@@ -86,7 +102,7 @@ class SubDlSourceProvider(SourceProvider):
                        request_internal_languages: List[Language],
                        title: str,
                        entry: dict) -> Optional[SearchResult]:
-        url = entry.get("url")
+        url = download_url_from_api_url(entry.get("url") or "")
         if not url:
             return None
         result = SearchResult()
@@ -132,9 +148,15 @@ class SubDlSourceProvider(SourceProvider):
         return results
 
     def _get(self, request: GetRequest) -> List[GetResult]:
-        url = request.search_result_id
+        url = download_url_from_api_url(request.search_result_id)
         if not url.startswith("http"):
             url = DOWNLOAD_URL + url
+        api_key = (self._settings.subdl_api_key or "").strip()
+        if api_key:
+            # dl.subdl.com only authorises through the query parameter (it ignores the key as a
+            # header), so the key is attached here instead of travelling in the search result id
+            # that Kodi stores, logs and passes back.
+            url += ("&" if "?" in url else "?") + "api_key=" + quote(api_key, safe="")
         http_response = self._http_client.exchange(HttpRequest(url))
         file_name = http_response.file_name or url.rsplit("/", 1)[-1] or "subtitle.zip"
         return self._process_get_subtitles_data(file_name, http_response.data)

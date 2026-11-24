@@ -14,6 +14,10 @@
   </requires>
   <extension point="xbmc.subtitle.module" library="main.py" />
   <extension point="xbmc.service" library="service.py" />
+  <!-- Lets the settings-dialog button open the web settings page. A subtitle module has no plugin
+       handler, so RunPlugin reaches nothing, and RunScript on a bare file path runs without addon
+       context (its "resources" import then resolves to another addon). -->
+  <extension point="xbmc.python.script" library="open_settings.py" />
   <extension point="xbmc.addon.metadata">
     <summary lang="en_US">Universal Subs plugin</summary>
     <description lang="es_AR">Busca y descarga subtítulos desde distintos proveedores</description>
@@ -38,7 +42,7 @@
     - Fixed additional bugs.
     </news>
     <assets>
-      <icon>icon.png</icon>
+      <icon>icon-new.png</icon>
       <clearlogo>logo.png</clearlogo>
       <!--
       <fanart></fanart>

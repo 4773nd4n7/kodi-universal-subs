@@ -60,6 +60,14 @@ class OpenSubtitlesComSourceProvider(SourceProvider):
     def _api_key(self) -> str:
         return (self._settings.opensubtitles_com_api_key or "").strip()
 
+    def missing_credentials(self) -> str:
+        if not self._api_key:
+            return "OpenSubtitles.com needs an API key"
+        if not (self._settings.opensubtitles_com_username or "").strip() \
+                or not self._settings.opensubtitles_com_password:
+            return "OpenSubtitles.com needs a username and password to download subtitles"
+        return ""
+
     def __build_headers(self, authenticated: bool = False) -> Dict[str, str]:
         headers = {
             "Api-Key": self._api_key,

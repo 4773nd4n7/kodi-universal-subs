@@ -16,13 +16,14 @@ tested outside Kodi.
 | Path | Contents |
 | --- | --- |
 | `main.py` | Kodi subtitle-module entry point; constructs `SubtitleAddon` and calls `main()` |
-| `service.py` | Kodi service; loopback receiver that stores the SubDivX browser session |
+| `open_settings.py` | `RunScript` entry point for the settings-dialog button: a subtitle module cannot receive `RunPlugin`, so the button runs this file |
+| `service.py` | Kodi service; serves the web settings page that edits every setting from a browser |
 | `resources/lib/subtitle_addon.py` | `SubtitleAddon`: argument parsing, Kodi UI/plugin calls, search and download orchestration |
 | `resources/lib/providers/` | `Provider` → `SourceProvider` (remote sites, local files) and `DecoratorProvider` (translation, cleanup); `providers_registry.py` composes the chain from settings |
 | `resources/lib/translation/` | `Translator` implementations (Google, Bing) and `translators_registry.py` |
 | `resources/lib/formats/` | Subtitle format parsers/renderers: SubRip, ASS/SSA, WebVTT, MicroDVD, MPlayer2, SBV, Google Play |
 | `resources/lib/common/` | `Language`, `MappedLanguages`, `Settings` |
-| `resources/lib/utils/` | HTTP client, caches, logging, YAML/JSON, compression, media info, subprocess, session capture |
+| `resources/lib/utils/` | HTTP client, caches, logging, YAML/JSON, compression, media info, subprocess, web settings page, restart handshake |
 | `resources/lib/tests/` | `unittest`-style cases discovered by pytest; one module per provider/translator |
 | `resources/settings.xml`, `resources/language/` | Kodi settings UI and its translations |
 | `scripts/addon_tasks.py` | the single definition of "addon content" used by `package` and `install` |
@@ -38,7 +39,7 @@ activating.
 | tests without touching the network | `uv run poe offline` | `$env:UNIVERSAL_SUBS_NETWORK_TESTS='0'; .venv\Scripts\pytest` |
 | lint | `uv run poe lint` | `.venv\Scripts\ruff check .` |
 | add-on zip | `uv run poe package` | `.venv\Scripts\python scripts/addon_tasks.py package` |
-| copy into Kodi | `uv run poe install` — add `-- --kodi-user <name>` when Kodi runs as another account | `.venv\Scripts\python scripts/addon_tasks.py install` |
+| copy into Kodi | `uv run poe install` — installs, then asks the running service to restart Kodi (a failure exits non-zero); `-- --kodi-user <name>` for another account, `-- --no-restart` to skip | `.venv\Scripts\python scripts/addon_tasks.py install` |
 
 `ruff check .` passes on `main` and is the enforced gate — keep it that way. **`ruff format` is not
 the project's formatter**: 73 files under `resources/lib` would be rewritten by it, and on ruff 0.17
@@ -92,7 +93,12 @@ it.
 5. **A setting is never just `settings.xml`.** A new setting needs its `<setting>` entry, a `label`
    and `help` string id, and matching `msgctxt` entries in `resources/language/resource.language.en_gb/strings.po`
    and `resources/language/resource.language.es_ar/strings.po`, plus the attribute on `Settings` and
-   the code that reads it. Follow the existing numbering scheme rather than inventing ids.
+   the code that reads it. Follow the existing numbering scheme rather than inventing ids. The web
+   settings page renders every setting from that file, so a new field appears there without any page
+   change — keep its type within `string`, `boolean`, `integer`, `path` or `list[string]`. A
+   credential is declared, never inferred: give its `<control>` a `<hidden>true</hidden>`, which Kodi
+   masks in its own dialog and the page treats as write-only (`tests/test_web_settings.py` fails when
+   an `api_key`/`password`/`token`/`session` setting lacks it).
 6. **New add-on content vs development scaffolding.** `scripts/addon_tasks.py` decides what ships.
    A new top-level development file belongs in `EXCLUDED_ROOT_NAMES`; a new development directory
    belongs in `EXCLUDED_DIRECTORIES`. Otherwise it silently lands inside the release zip and in

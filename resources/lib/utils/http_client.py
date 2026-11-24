@@ -11,7 +11,8 @@ from datetime import timedelta
 from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Literal, Set, Tuple, TypeVar
-from urllib.parse import unquote, urlencode, urlparse
+from urllib.parse import (parse_qsl, unquote, unquote_to_bytes, urlencode, urlparse,
+                         urlsplit, urlunsplit)
 from urllib.request import (HTTPDefaultErrorHandler, HTTPHandler, HTTPRedirectHandler, HTTPSHandler,
                             OpenerDirector)
 from uuid import uuid4
@@ -57,6 +58,43 @@ def url_encode(params_data: Dict[any, any]) -> str:
     return urlencode(param_tuples)
 
 
+SECRET_QUERY_PARAMETERS = (
+    "api_key", "apikey", "key", "token", "password", "pwd", "sig", "signature", "secret", "session",
+    "auth",
+)
+
+
+def redact_url(url: str) -> str:
+    """The URL with credential-looking query values masked, for logs.
+
+    Some providers only accept their key as a query parameter (SubDL ignores it as a header), so the
+    request has to carry it; the log does not.
+    """
+    try:
+        parsed = urlsplit(url or "")
+    except ValueError:
+        return url
+    if not parsed.query:
+        return url
+    pairs = parse_qsl(parsed.query, keep_blank_values=True)
+    masked = [(name, "***" if name.lower() in SECRET_QUERY_PARAMETERS else value)
+              for name, value in pairs]
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path,
+                       urlencode(masked, doseq=True, safe="*"), parsed.fragment))
+
+
+def decode_extended_file_name(value: str, charset: str) -> str:
+    """Decode an RFC 5987 ``filename*=charset''value`` payload.
+
+    ``unquote`` already returns text in Python 3; the percent escapes only need decoding with the
+    charset the header names, falling back to the raw value when the charset is unknown.
+    """
+    try:
+        return unquote_to_bytes(value).decode(charset or "utf-8", "replace")
+    except (LookupError, UnicodeDecodeError):
+        return unquote(value)
+
+
 def parse_content_disposition_file_name(value: str) -> str:
     token = r'[-!#-\'*+.\dA-Z^-z|~]+'
     qdtext = r'[]-~\t !#-[]'
@@ -77,9 +115,9 @@ def parse_content_disposition_file_name(value: str) -> str:
     if not match:
         return None
     elif match.group(8) is not None:
-        file_name = unquote(match.group(8)).decode(match.group(7))
+        file_name = decode_extended_file_name(match.group(8), match.group(7))
     elif match.group(4) is not None:
-        file_name = unquote(match.group(4)).decode(match.group(3))
+        file_name = decode_extended_file_name(match.group(4), match.group(3))
     elif match.group(6) is not None:
         file_name = re.sub('\\\\(.)', '\1', match.group(6))
     elif match.group(5) is not None:
@@ -340,7 +378,7 @@ class HttpClient():
             cache_value: Dict[str, Any] = self._cache.get(cache_key)
             if cache_value:
                 self._logger.info("Processing request %s %s (FOUND IN CACHE)" %
-                                  (request.method, resolved_url))
+                                  (request.method, redact_url(resolved_url)))
                 return HttpResponse(
                     request,
                     cache_value["status_code"],
@@ -364,7 +402,7 @@ class HttpClient():
             urllib_request.add_header(key, value)
         try:
             self._logger.info("Processing request %s %s (pending retries: %s)" %
-                              (request.method, resolved_url, pending_retries))
+                              (request.method, redact_url(resolved_url), pending_retries))
             urlopener = self._urlopeners["%s:%s" % (request.follow_redirects, request.throw_on_error_codes)]
             urllib_response = urlopener.open(urllib_request)
             return HttpResponse(
@@ -375,7 +413,7 @@ class HttpClient():
                 urllib_response.effective_request_url)
         except urllib.error.HTTPError as e:
             self._logger.error("Error processing request %s %s (HTTP status: %d, Body: %s)" %
-                               (request.method, resolved_url, e.code, e.read().decode("utf-8", errors="ignore")), exc_info=True, stack_info=False)
+                               (request.method, redact_url(resolved_url), e.code, e.read().decode("utf-8", errors="ignore")), exc_info=True, stack_info=False)
             if pending_retries:
                 if self.retry_delay:
                     time.sleep(self.retry_delay.total_seconds())
@@ -383,12 +421,12 @@ class HttpClient():
             raise e
         except urllib.error.URLError as e:
             self._logger.error("Error processing request %s %s (connection error)" %
-                               (request.method, resolved_url), exc_info=True, stack_info=False)
+                               (request.method, redact_url(resolved_url)), exc_info=True, stack_info=False)
             if pending_retries:
                 if self.retry_delay:
                     time.sleep(self.retry_delay.total_seconds())
                 return self.__exchange_impl(request, resolved_url, resolved_headers, pending_retries - 1)
             raise e
         except Exception as e:
-            self._logger.error("Error processing request %s %s: %s" % (request.method, resolved_url, e), exc_info=True)
+            self._logger.error("Error processing request %s %s: %s" % (request.method, redact_url(resolved_url), e), exc_info=True)
             raise e

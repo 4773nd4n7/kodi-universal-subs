@@ -57,6 +57,30 @@ class HttpResponseHeadersTest(unittest.TestCase):
         response = build_response({"Content-Disposition": ['attachment; filename="The Matrix.srt"']})
         self.assertEqual("The Matrix.srt", response.file_name)
 
+    def test_file_name_reads_the_extended_utf8_form(self) -> None:
+        # RFC 5987 form; SubDL sends this, and it used to crash with "'str' object has no attribute
+        # 'decode'" because unquote already returns text under Python 3.
+        response = build_response(
+            {"Content-Disposition": ["attachment; filename*=UTF-8''The%20Matrix.srt"]})
+        self.assertEqual("The Matrix.srt", response.file_name)
+
+    def test_file_name_reads_the_extended_latin1_form(self) -> None:
+        response = build_response(
+            {"Content-Disposition": ["attachment; filename*=ISO-8859-1''caf%E9.srt"]})
+        self.assertEqual("café.srt", response.file_name)
+
+    def test_credential_query_values_are_masked_for_logs(self) -> None:
+        # SubDL only accepts its key as a query parameter, so it has to travel in the URL; the log
+        # must not carry it.
+        from resources.lib.utils.http_client import redact_url
+
+        self.assertEqual("https://api.example/x?api_key=***&page=2",
+                         redact_url("https://api.example/x?api_key=subdl_secret&page=2"))
+        self.assertEqual("https://api.example/x?token=***&sig=***",
+                         redact_url("https://api.example/x?token=abc&sig=def"))
+        self.assertEqual("https://api.example/x?page=2",
+                         redact_url("https://api.example/x?page=2"))
+
 
 if __name__ == '__main__':
     unittest.main()

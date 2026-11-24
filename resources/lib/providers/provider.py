@@ -28,6 +28,14 @@ class Provider:
     def short_name(self) -> str:
         return self.name
 
+    def missing_credentials(self) -> str:
+        """The credentials this provider still needs, empty when it has everything.
+
+        A provider that returns an empty list because it is not configured looks like "no subtitles
+        found", so the add-on asks this to tell the user *why* instead.
+        """
+        return ""
+
     @abstractmethod
     def search(self, request: SearchRequest) -> List[SearchResult]:
         pass

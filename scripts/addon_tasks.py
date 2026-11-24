@@ -13,6 +13,12 @@ When Kodi runs as its own local account — the usual HTPC arrangement, where th
 as a dedicated user — the userdata lives in that account's profile, not the caller's ``%APPDATA%``.
 ``--kodi-user <name>`` targets it by account name; it and ``--kodi-home`` are mutually exclusive.
 
+``install`` copies the files, then asks the running add-on service to restart Kodi by dropping a
+trigger file in the add-on profile: that service runs in the media centre's session as the account
+that owns it, so the restart lands where a process spawned from here could not. ``--no-restart`` skips
+it. If the service does not react — an older build, or no service running — the install says so and
+exits non-zero, leaving Kodi alone: launching it from here is precisely what does not work.
+
 Both commands share one definition of "addon content", so a file that is left out of the zip is
 also left out of the install and the two never drift.
 """
@@ -20,14 +26,19 @@ also left out of the install and the two never drift.
 import argparse
 import os
 import shutil
+import subprocess
 import sys
+import time
 import tomllib
 import zipfile
 from pathlib import Path
-from typing import Iterator, Tuple
+from typing import Iterator, List, Tuple
 from xml.etree import ElementTree
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+
+#: How long to wait for the service to restart Kodi before reporting a failure.
+RESTART_TIMEOUT_SECONDS = 45
 
 #: Development scaffolding, not addon content.
 EXCLUDED_DIRECTORIES = {
@@ -187,7 +198,70 @@ def ensure_outside_repository(kodi_home: Path) -> None:
         "copy the installed add-on back into itself" % kodi_home)
 
 
-def install(kodi_home: Path) -> int:
+def running_kodi_pids() -> List[int]:
+    """The process ids of a running Kodi, empty when it is not running."""
+    if os.name == "nt":
+        try:
+            completed = subprocess.run(["tasklist", "/FI", "IMAGENAME eq kodi.exe", "/NH", "/FO", "CSV"],
+                                       capture_output=True, text=True, timeout=30)
+        except (OSError, subprocess.SubprocessError):
+            return []
+        pids = []
+        for line in (completed.stdout or "").splitlines():
+            fields = [field.strip().strip('"') for field in line.split('","')]
+            if fields and fields[0].strip('"').lower() == "kodi.exe" and len(fields) > 1:
+                try:
+                    pids.append(int(fields[1].strip('"')))
+                except ValueError:
+                    continue
+        return pids
+    try:
+        completed = subprocess.run(["pgrep", "-x", "kodi"], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return [int(value) for value in (completed.stdout or "").split() if value.isdigit()]
+
+
+def kodi_profile_dir(kodi_home: Path) -> Path:
+    """The add-on profile Kodi derives from its userdata; the service watches it for the trigger."""
+    return kodi_home / "userdata" / "addon_data" / read_addon_id()
+
+
+def _kodi_restart_module():
+    if str(REPOSITORY_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPOSITORY_ROOT))
+    from resources.lib.utils import kodi_restart
+    return kodi_restart
+
+
+def request_restart_from_service(kodi_home: Path) -> bool:
+    """Ask the running add-on service to restart Kodi; True when the trigger file was written.
+
+    This is the only way to restart a Kodi that lives in another account's session: a process started
+    from here would run as the caller, but the service already runs as the right user.
+    """
+    return _kodi_restart_module().write_restart_request(kodi_profile_dir(kodi_home))
+
+
+def clear_restart_request(kodi_home: Path) -> None:
+    try:
+        _kodi_restart_module().restart_request_path(kodi_profile_dir(kodi_home)).unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
+def wait_for_restart(previous_pids: List[int], timeout_seconds: int = RESTART_TIMEOUT_SECONDS) -> Tuple[bool, str]:
+    """Wait until the old Kodi processes are gone and a new one is running."""
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        current = set(running_kodi_pids())
+        if current and not current.intersection(previous_pids):
+            return True, ""
+        time.sleep(1.0)
+    return False, "Kodi did not restart within %d seconds" % timeout_seconds
+
+
+def install(kodi_home: Path, restart: bool = True) -> int:
     ensure_outside_repository(kodi_home)
     addon_id = read_addon_id()
     target = kodi_home / "addons" / addon_id
@@ -207,14 +281,33 @@ def install(kodi_home: Path) -> int:
     except PermissionError as error:
         raise SystemExit(
             "[addon] cannot write to %s: %s\n"
-            "Another account owns that userdata directory; run an elevated shell, or install with "
-            "--kodi-home." % (target, error))
+            "Either another account owns that userdata directory, or a running Kodi holds these "
+            "files open; close Kodi, run an elevated shell, or install with --kodi-home."
+            % (target, error))
 
     print(
         "[addon] installed %d files into %s (version %s)"
         % (len(files), target, project_version())
     )
-    print("[addon] restart Kodi so it picks up the new code")
+    if not restart:
+        return 0
+    previous_pids = running_kodi_pids()
+    if not previous_pids:
+        return 0
+
+    # The service restarts Kodi for us, which also works when Kodi runs as another account: it is
+    # already inside that account's session, where a process spawned from here could never be.
+    if not request_restart_from_service(kodi_home):
+        print("[addon] error: could not write a restart request into %s; restart Kodi yourself"
+              % kodi_profile_dir(kodi_home), file=sys.stderr)
+        return 1
+    restarted, reason = wait_for_restart(previous_pids)
+    if not restarted:
+        clear_restart_request(kodi_home)
+        print("[addon] error: %s; the running add-on may predate this feature, restart Kodi yourself"
+              % reason, file=sys.stderr)
+        return 1
+    print("[addon] Kodi restarted itself at the running add-on's request")
     return 0
 
 
@@ -247,6 +340,11 @@ def main(argv: list = None) -> int:
         help="local account whose Kodi userdata to install into, as Kodi usually runs as its own "
              "user (cannot be combined with --kodi-home)",
     )
+    install_parser.add_argument(
+        "--no-restart",
+        action="store_true",
+        help="leave a running Kodi alone instead of asking the add-on to restart it",
+    )
 
     # poe appends a literal '--' ahead of extra task arguments; argparse would stop there.
     argv = [item for item in (argv if argv is not None else sys.argv[1:]) if item != "--"]
@@ -258,7 +356,7 @@ def main(argv: list = None) -> int:
         kodi_home = kodi_home_for_user(arguments.kodi_user)
     else:
         kodi_home = arguments.kodi_home or default_kodi_home()
-    return install(kodi_home.expanduser().resolve())
+    return install(kodi_home.expanduser().resolve(), restart=not arguments.no_restart)
 
 
 if __name__ == "__main__":

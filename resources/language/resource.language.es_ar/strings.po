@@ -140,3 +140,51 @@ msgstr "Contraseña de OpenSubtitles.com"
 msgctxt "#400111"
 msgid "Password for that account, stored in Kodi's settings. Downloads consume the account's daily quota."
 msgstr "Contraseña de esa cuenta, guardada en la configuración de Kodi. Las descargas consumen la cuota diaria de la cuenta."
+
+msgctxt "#70000"
+msgid "Web settings page"
+msgstr "Página web de configuración"
+
+msgctxt "#700001"
+msgid "Edit these settings from a browser instead of Kodi's settings dialog."
+msgstr "Editá estas opciones desde un navegador en lugar del diálogo de configuración de Kodi."
+
+msgctxt "#70001"
+msgid "Settings page port"
+msgstr "Puerto de la página de configuración"
+
+msgctxt "#700011"
+msgid "TCP port the page listens on. Change it when the port is taken; it applies the next time Kodi starts."
+msgstr "Puerto TCP donde escucha la página. Cambialo cuando el puerto esté ocupado; se aplica la próxima vez que inicie Kodi."
+
+msgctxt "#70002"
+msgid "Settings page address"
+msgstr "Dirección de la página de configuración"
+
+msgctxt "#700021"
+msgid "127.0.0.1 keeps the page on this machine. Use 0.0.0.0 to let other devices reach it, together with the allowed addresses below."
+msgstr "127.0.0.1 mantiene la página en esta máquina. Usá 0.0.0.0 para permitir otros dispositivos, junto con las direcciones permitidas de abajo."
+
+msgctxt "#70003"
+msgid "Allowed client addresses"
+msgstr "Direcciones de clientes permitidas"
+
+msgctxt "#700031"
+msgid "Comma-separated IP addresses or ranges, for example 192.168.1.50,192.168.1.0/24, allowed to use the page when it listens beyond loopback. Loopback clients are always allowed."
+msgstr "Direcciones o rangos IP separados por comas, por ejemplo 192.168.1.50,192.168.1.0/24, autorizados a usar la página cuando escucha fuera de loopback. Los clientes locales siempre están permitidos."
+
+msgctxt "#70004"
+msgid "Open the settings page in a browser"
+msgstr "Abrir la página de configuración en un navegador"
+
+msgctxt "#700041"
+msgid "Opens the page at http://127.0.0.1:39517/ (or the configured address) in the default browser. On a device without one, the address is shown so it can be opened from somewhere else."
+msgstr "Abre la página en http://127.0.0.1:39517/ (o la dirección configurada) en el navegador predeterminado. En un dispositivo sin navegador, muestra la dirección para abrirla en otro lado."
+
+msgctxt "#80000"
+msgid "Credentials"
+msgstr "Credenciales"
+
+msgctxt "#800001"
+msgid "Keys and passwords the providers sign in with, plus the SubDivX browser session that Cloudflare demands of every client that is not a browser. Kodi masks them and the web settings page shows them write-only: a stored value is never rendered, and leaving a field empty keeps it."
+msgstr "Claves y contraseñas con las que los proveedores inician sesión, más la sesión de navegador que SubDivX necesita para pasar Cloudflare. Kodi las oculta y la página de configuración web las muestra como solo escritura: nunca se muestra un valor guardado, y dejar el campo vacío lo conserva."

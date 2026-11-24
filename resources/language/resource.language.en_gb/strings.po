@@ -168,3 +168,51 @@ msgstr "OpenSubtitles.com password"
 msgctxt "#400111"
 msgid "Password for that account, stored in Kodi's settings. Downloads consume the account's daily quota."
 msgstr ""
+
+msgctxt "#70000"
+msgid "Web settings page"
+msgstr "Web settings page"
+
+msgctxt "#700001"
+msgid "Edit these settings from a browser instead of Kodi's settings dialog."
+msgstr ""
+
+msgctxt "#70001"
+msgid "Settings page port"
+msgstr "Settings page port"
+
+msgctxt "#700011"
+msgid "TCP port the page listens on. Change it when the port is taken; it applies the next time Kodi starts."
+msgstr ""
+
+msgctxt "#70002"
+msgid "Settings page address"
+msgstr "Settings page address"
+
+msgctxt "#700021"
+msgid "127.0.0.1 keeps the page on this machine. Use 0.0.0.0 to let other devices reach it, together with the allowed addresses below."
+msgstr ""
+
+msgctxt "#70003"
+msgid "Allowed client addresses"
+msgstr "Allowed client addresses"
+
+msgctxt "#700031"
+msgid "Comma-separated IP addresses or ranges, for example 192.168.1.50,192.168.1.0/24, allowed to use the page when it listens beyond loopback. Loopback clients are always allowed."
+msgstr ""
+
+msgctxt "#70004"
+msgid "Open the settings page in a browser"
+msgstr "Open the settings page in a browser"
+
+msgctxt "#700041"
+msgid "Opens the page at http://127.0.0.1:39517/ (or the configured address) in the default browser. On a device without one, the address is shown so it can be opened from somewhere else."
+msgstr ""
+
+msgctxt "#80000"
+msgid "Credentials"
+msgstr "Credentials"
+
+msgctxt "#800001"
+msgid "Keys and passwords the providers sign in with, plus the SubDivX browser session that Cloudflare demands of every client that is not a browser. Kodi masks them and the web settings page shows them write-only: a stored value is never rendered, and leaving a field empty keeps it."
+msgstr ""
