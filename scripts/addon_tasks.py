@@ -9,6 +9,10 @@ reads at startup.
 The Kodi home defaults to ``%APPDATA%\\Kodi`` on Windows and ``~/.kodi`` elsewhere; override it
 with ``--kodi-home`` or the ``KODI_HOME`` environment variable (portable installs, media boxes).
 
+When Kodi runs as its own local account — the usual HTPC arrangement, where the media centre logs in
+as a dedicated user — the userdata lives in that account's profile, not the caller's ``%APPDATA%``.
+``--kodi-user <name>`` targets it by account name; it and ``--kodi-home`` are mutually exclusive.
+
 Both commands share one definition of "addon content", so a file that is left out of the zip is
 also left out of the install and the two never drift.
 """
@@ -124,6 +128,28 @@ def default_kodi_home() -> Path:
     return Path.home() / ".kodi"
 
 
+def users_root() -> Path:
+    """The directory holding the local accounts' profile directories."""
+    return Path("C:/Users") if os.name == "nt" else Path("/home")
+
+
+def kodi_home_for_user(user: str) -> Path:
+    """The Kodi userdata directory of another local account.
+
+    Kodi commonly runs as a dedicated account, so its add-ons belong in that account's profile
+    rather than in the caller's ``%APPDATA%``. A ``DOMAIN\\name`` or ``.\\name`` form is accepted, and
+    the profile has to exist: a mistyped name would otherwise install into a directory nobody reads.
+    """
+    account = user.split("\\")[-1].strip()
+    profile = users_root() / account
+    if not account or not profile.is_dir():
+        raise SystemExit(
+            "[addon] no local profile for user '%s' (looked for %s)" % (user, profile))
+    if os.name == "nt":
+        return profile / "AppData" / "Roaming" / "Kodi"
+    return profile / ".kodi"
+
+
 def package(output: Path) -> int:
     files = list(addon_files())
     addon_xml = rendered_addon_xml()
@@ -146,21 +172,43 @@ def package(output: Path) -> int:
     return 0
 
 
+def ensure_outside_repository(kodi_home: Path) -> None:
+    """Refuse a Kodi home inside the repository.
+
+    ``addon_files`` scans the whole checkout, so a target inside it would be collected as add-on
+    content and then deleted by ``install`` while it is being copied.
+    """
+    try:
+        kodi_home.resolve().relative_to(REPOSITORY_ROOT.resolve())
+    except ValueError:
+        return
+    raise SystemExit(
+        "[addon] refusing to install into %s: it is inside the repository, so the file scan would "
+        "copy the installed add-on back into itself" % kodi_home)
+
+
 def install(kodi_home: Path) -> int:
+    ensure_outside_repository(kodi_home)
     addon_id = read_addon_id()
     target = kodi_home / "addons" / addon_id
     files = list(addon_files())
     addon_xml = rendered_addon_xml()
 
-    if target.exists():
-        shutil.rmtree(str(target))
-    for path, relative in files:
-        destination = target / relative
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        if relative == Path(ADDON_XML):
-            destination.write_text(addon_xml, encoding="utf-8")
-        else:
-            shutil.copy2(str(path), str(destination))
+    try:
+        if target.exists():
+            shutil.rmtree(str(target))
+        for path, relative in files:
+            destination = target / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            if relative == Path(ADDON_XML):
+                destination.write_text(addon_xml, encoding="utf-8")
+            else:
+                shutil.copy2(str(path), str(destination))
+    except PermissionError as error:
+        raise SystemExit(
+            "[addon] cannot write to %s: %s\n"
+            "Another account owns that userdata directory; run an elevated shell, or install with "
+            "--kodi-home." % (target, error))
 
     print(
         "[addon] installed %d files into %s (version %s)"
@@ -185,11 +233,19 @@ def main(argv: list = None) -> int:
     )
 
     install_parser = subparsers.add_parser("install", help="copy the addon into Kodi")
-    install_parser.add_argument(
+    target_group = install_parser.add_mutually_exclusive_group()
+    target_group.add_argument(
         "--kodi-home",
         type=Path,
         default=None,
-        help="Kodi home directory (default: $KODI_HOME, %%APPDATA%%\\Kodi or ~/.kodi)",
+        help="Kodi userdata directory (default: $KODI_HOME, %%APPDATA%%\\Kodi or ~/.kodi)",
+    )
+    target_group.add_argument(
+        "--kodi-user",
+        default=None,
+        metavar="NAME",
+        help="local account whose Kodi userdata to install into, as Kodi usually runs as its own "
+             "user (cannot be combined with --kodi-home)",
     )
 
     # poe appends a literal '--' ahead of extra task arguments; argparse would stop there.
@@ -198,7 +254,11 @@ def main(argv: list = None) -> int:
     if arguments.command == "package":
         output = arguments.output or (REPOSITORY_ROOT / (read_addon_id() + ".zip"))
         return package(output.resolve())
-    return install((arguments.kodi_home or default_kodi_home()).expanduser().resolve())
+    if arguments.kodi_user:
+        kodi_home = kodi_home_for_user(arguments.kodi_user)
+    else:
+        kodi_home = arguments.kodi_home or default_kodi_home()
+    return install(kodi_home.expanduser().resolve())
 
 
 if __name__ == "__main__":

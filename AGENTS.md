@@ -38,7 +38,7 @@ activating.
 | tests without touching the network | `uv run poe offline` | `$env:UNIVERSAL_SUBS_NETWORK_TESTS='0'; .venv\Scripts\pytest` |
 | lint | `uv run poe lint` | `.venv\Scripts\ruff check .` |
 | add-on zip | `uv run poe package` | `.venv\Scripts\python scripts/addon_tasks.py package` |
-| copy into Kodi | `uv run poe install` | `.venv\Scripts\python scripts/addon_tasks.py install` |
+| copy into Kodi | `uv run poe install` — add `-- --kodi-user <name>` when Kodi runs as another account | `.venv\Scripts\python scripts/addon_tasks.py install` |
 
 `ruff check .` passes on `main` and is the enforced gate — keep it that way. **`ruff format` is not
 the project's formatter**: 73 files under `resources/lib` would be rewritten by it, and on ruff 0.17

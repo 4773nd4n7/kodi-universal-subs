@@ -51,6 +51,20 @@ live in `[tool.poe.tasks]`:
 Extra arguments reach pytest after `poe <task> --`, for example `uv run poe test -- -k cleanup`,
 `uv run poe test -- -x --tb=line`, or `uv run poe install -- --kodi-home "$env:APPDATA\Kodi"`.
 
+`poe install` writes to `<Kodi userdata>\addons\service.subtitles.universalsubs`. That userdata
+belongs to the Windows account running Kodi, which is not necessarily the one you build from: a
+media centre usually runs Kodi as its own account, so `%APPDATA%\Kodi` of your shell is the wrong
+place. Name that account instead of spelling out the path:
+
+```powershell
+uv run poe install -- --kodi-user Kodi   # C:\Users\Kodi\AppData\Roaming\Kodi
+```
+
+`--kodi-user` also accepts the `DOMAIN\name` form and rejects an account that has no profile
+directory. It and `--kodi-home` are mutually exclusive, and `KODI_HOME` still covers the portable
+case. Either way the install replaces the add-on folder wholesale and rewrites `addon.xml` with the
+real version; restart Kodi so it loads the new code.
+
 The suite runs on [pytest](https://docs.pytest.org/), which discovers the `unittest`-style test
 cases as they are. `-v` is part of the configured `addopts`, so the console names each test as it
 starts and appends the outcome when it finishes; `-q` swaps that for the compact dots view.
@@ -113,13 +127,29 @@ scripts, not tests: they run live searches with hardcoded media paths.
 ## SubDivX and Cloudflare
 
 `subdivx.com` sits behind a Cloudflare managed challenge, so the add-on cannot reach it with a
-plain HTTP client. The browser can. With Kodi running, open **<http://127.0.0.1:39517/>** in a
-browser on the same computer: that page shows the script, a Copy button, and the steps. Run the
-script on `subdivx.com` and the add-on service stores the session automatically (it listens on
-`127.0.0.1:39517`); if Kodi cannot be reached the script copies the blob for
-**Settings -> Advanced -> SubDivX browser session**. When SubDivX is blocked and no session is
-configured, Kodi also shows a notification with that address. The session expires: repeat when
-SubDivX stops returning results.
+plain HTTP client. The browser can, but the clearance cookie Cloudflare issues (`cf_clearance`) is
+marked `HttpOnly`, so no script running in the page can read it — the session has to be copied out
+of the request itself:
+
+1. With Kodi running, open **<http://127.0.0.1:39517/>**: that page carries the steps and a paste
+   box.
+2. On `subdivx.com`, press `F12`, switch to **Network**, reload the page, then select a request the
+   page made *after* it finished loading — the first document request can be the Cloudflare
+   challenge itself and carry no clearance cookie. Right-click it and choose
+   **Copy → Copy as cURL (bash)** (or *cmd*).
+3. Paste that into the page and press **Send to Kodi**. The add-on service stores it automatically
+   (it listens on `127.0.0.1:39517`); if Kodi cannot be reached, paste the same text into
+   **Settings → Advanced → SubDivX browser session**.
+
+The whole request is copied, not just the cookie value, because Cloudflare binds `cf_clearance` to
+the user agent that obtained it: the add-on replays both. Pasting only the `cf_clearance` value is
+accepted, but it carries no user agent, so if a value-only paste keeps getting challenged, copy a
+whole request instead. If Kodi refuses the paste, the page names
+the reason — "no cookie header" usually means the challenge request was copied instead of a later
+one, while "no cf_clearance" means the clearance had not been issued yet. When SubDivX is blocked and
+no session is configured, Kodi shows a notification with that address. The session expires: repeat
+when SubDivX stops returning results. Anyone holding it can act as that browser session, so do not
+share it.
 
 ## SubDL
 

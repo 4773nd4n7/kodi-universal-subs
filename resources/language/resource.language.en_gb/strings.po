@@ -134,7 +134,7 @@ msgid "SubDivX browser session"
 msgstr "SubDivX browser session"
 
 msgctxt "#400071"
-msgid "Cloudflare protects SubDivX from clients that are not browsers. With Kodi running, open http://127.0.0.1:39517/ in a browser on this same computer: that page shows the script to run on subdivx.com and copies it for you. Alternatively paste the captured text here. The value expires; repeat when SubDivX stops returning results."
+msgid "Cloudflare protects SubDivX from clients that are not browsers, and the clearance cookie it issues cannot be read by page scripts. With Kodi running, open http://127.0.0.1:39517/ in a browser on this same computer: copy the subdivx.com request from the developer tools (Copy as cURL) and paste it there, or paste that same text here. The value expires; repeat when SubDivX stops returning results."
 msgstr ""
 
 msgctxt "#40008"

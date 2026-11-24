@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from resources.lib.common.settings import Settings
 from resources.lib.providers.addic7ed_source_provider import \
@@ -47,7 +47,7 @@ class ProvidersRegistry:
             ]
         }
 
-    def get_provider(self, name: str) -> Provider | None:
+    def get_provider(self, name: str) -> Optional[Provider]:
         """The registered provider with that name, or None when the name is not registered.
 
         A name can be unknown because the Kodi setting still holds a provider removed from this
